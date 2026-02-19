@@ -86,6 +86,7 @@ export class Config extends Observable {
         this.setProperty("dynamicWorkplane", value);
     }
 
+    @serialze()
     get gridVisible() {
         return this.getPrivateValue("gridVisible", true);
     }
@@ -93,6 +94,7 @@ export class Config extends Observable {
         this.setProperty("gridVisible", value);
     }
 
+    @serialze()
     get gridSnap() {
         return this.getPrivateValue("gridSnap", true);
     }
@@ -100,6 +102,7 @@ export class Config extends Observable {
         this.setProperty("gridSnap", value);
     }
 
+    @serialze()
     get gridSize() {
         return this.getPrivateValue("gridSize", 1);
     }
@@ -107,6 +110,7 @@ export class Config extends Observable {
         if (value > 0) this.setProperty("gridSize", value);
     }
 
+    @serialze()
     get orthoMode() {
         return this.getPrivateValue("orthoMode", false);
     }

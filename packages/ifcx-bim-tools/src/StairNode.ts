@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import {
@@ -107,7 +107,7 @@ export class StairNode extends ParameterShapeNode {
         return this.getPrivateValue("width");
     }
     set width(v: number) {
-        this.setPropertyEmitShapeChanged("width", v);
+        if (v > 0) this.setPropertyEmitShapeChanged("width", v);
     }
 
     @serialze()
@@ -128,9 +128,6 @@ export class StairNode extends ParameterShapeNode {
         if (v > 0) this.setPropertyEmitShapeChanged("thickness", v);
     }
 
-    /** IFC entity type marker — read by IFCXSerializer on export. */
-    readonly ifcType = "IfcStair";
-
     constructor(
         document: IDocument,
         base: XYZ,
@@ -140,6 +137,7 @@ export class StairNode extends ParameterShapeNode {
         thickness = 0.15,
     ) {
         super(document);
+        this.setPrivateValue("ifcType", "IfcStair");
         this.setPrivateValue("baseX", base.x);
         this.setPrivateValue("baseY", base.y);
         this.setPrivateValue("baseZ", base.z);

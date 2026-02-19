@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import { div, Expander, label, span } from "chili-controls";
@@ -37,20 +37,49 @@ const IFC_COMPONENT_DEFS: Record<string, IfcComponentDef> = {
         psetName: "Pset_BeamCommon",
         pset: { IsExternal: false, LoadBearing: true },
     },
+    IfcDoor: {
+        predefinedType: "DOOR",
+        psetName: "Pset_DoorCommon",
+        pset: { IsExternal: false, HandicapAccessible: false, FireRating: "" },
+    },
+    IfcWindow: {
+        predefinedType: "WINDOW",
+        psetName: "Pset_WindowCommon",
+        pset: { IsExternal: false, FireRating: "", ThermalTransmittance: null },
+    },
+    IfcStair: {
+        predefinedType: "STRAIGHT_RUN_STAIR",
+        psetName: "Pset_StairCommon",
+        pset: { RequiredHeadroom: null, HandicapAccessible: false, FireExit: false },
+    },
 };
+
+/** Ordered list of assignable IFC entity types shown in the dropdown. */
+const IFC_TYPES = [
+    "IfcWall",
+    "IfcSlab",
+    "IfcColumn",
+    "IfcBeam",
+    "IfcDoor",
+    "IfcWindow",
+    "IfcStair",
+] as const;
 
 /**
  * Component Inspector sidebar panel.
  *
  * Displays the IFCX component data that will be written on export for the
- * currently selected BIM element. Subscribes to the same `showProperties`
- * and `activeViewChanged` events as PropertyView so it stays in sync.
+ * currently selected geometry node. All geometry nodes expose a mutable
+ * `ifcType` property, so the inspector shows a dropdown that lets the user
+ * assign or change the IFC class directly. Non-geometry nodes (folders, groups)
+ * show a subtle "No IFC component" placeholder.
  *
- * When no BIM element is selected the panel shows a subtle "No IFC component"
- * message so the user knows what the panel is for.
+ * Subscribes to the same `showProperties` and `activeViewChanged` events as
+ * PropertyView so it stays in sync.
  */
 export class ComponentInspector extends HTMLElement {
     private readonly panel = div({ className: style.panel });
+    private _currentNode: INode | undefined;
 
     constructor(props: { className: string }) {
         super();
@@ -78,19 +107,89 @@ export class ComponentInspector extends HTMLElement {
 
     private readonly handleShowProperties = (_document: IDocument, nodes: INode[]) => {
         this.clear();
-        if (nodes.length === 0) {
+        this._currentNode = nodes[0];
+        if (!this._currentNode) {
             this.showEmpty();
             return;
         }
-        // Use first selected node; only show IFC data if it carries an ifcType.
-        const node = nodes[0];
-        const ifcType = (node as unknown as { ifcType?: string }).ifcType;
-        if (!ifcType) {
+        // Show the IFC class dropdown for any geometry node (duck-typed by ifcType property).
+        if ("ifcType" in this._currentNode) {
+            this.renderWithDropdown(this._currentNode as INode & { ifcType?: string });
+        } else {
             this.showEmpty();
-            return;
         }
-        this.renderComponent(ifcType);
     };
+
+    private renderWithDropdown(node: INode & { ifcType?: string }) {
+        const currentType = node.ifcType;
+
+        // Select element for IFC class assignment
+        const select = document.createElement("select");
+        select.className = style.select;
+
+        const noneOption = document.createElement("option");
+        noneOption.value = "";
+        noneOption.textContent = "— None —";
+        if (!currentType) noneOption.selected = true;
+        select.appendChild(noneOption);
+
+        for (const type of IFC_TYPES) {
+            const option = document.createElement("option");
+            option.value = type;
+            option.textContent = type;
+            if (type === currentType) option.selected = true;
+            select.appendChild(option);
+        }
+
+        this.panel.append(
+            div(
+                { className: style.assignRow },
+                span({ className: style.propName, textContent: new Localize("ifc.assignClass") }),
+                select,
+            ),
+        );
+
+        // Detail section rendered below the dropdown
+        const detail = div({ className: style.detail });
+        this.panel.append(detail);
+
+        if (currentType) {
+            this.renderComponentDetail(detail, currentType);
+        }
+
+        select.addEventListener("change", () => {
+            const newType = select.value || undefined;
+            (node as any).ifcType = newType;
+            while (detail.lastElementChild) detail.removeChild(detail.lastElementChild);
+            if (newType) {
+                this.renderComponentDetail(detail, newType);
+            }
+        });
+    }
+
+    private renderComponentDetail(container: HTMLElement, ifcType: string) {
+        const def = IFC_COMPONENT_DEFS[ifcType];
+
+        // IFC entity type badge
+        container.append(span({ className: style.badge, textContent: ifcType }));
+
+        // Type Properties expander (predefined type)
+        const typeExpander = new Expander("ifc.typeProperties");
+        typeExpander.contenxtPanel.append(
+            this.propRow("predefinedType", def?.predefinedType ?? "—"),
+        );
+        container.append(typeExpander);
+
+        if (!def) return;
+
+        // Property Set expander
+        const psetExpander = new Expander("ifc.propertySet");
+        psetExpander.contenxtPanel.append(
+            span({ textContent: def.psetName, className: style.propName, style: "margin-bottom:4px;" }),
+            ...Object.entries(def.pset).map(([k, v]) => this.propRow(k, v)),
+        );
+        container.append(psetExpander);
+    }
 
     private clear() {
         while (this.panel.lastElementChild) {
@@ -105,30 +204,6 @@ export class ComponentInspector extends HTMLElement {
                 textContent: new Localize("ifc.noComponent"),
             }),
         );
-    }
-
-    private renderComponent(ifcType: string) {
-        const def = IFC_COMPONENT_DEFS[ifcType];
-
-        // IFC entity type badge
-        this.panel.append(span({ className: style.badge, textContent: ifcType }));
-
-        // Type Properties expander (predefined type)
-        const typeExpander = new Expander("ifc.typeProperties");
-        typeExpander.contenxtPanel.append(
-            this.propRow("predefinedType", def?.predefinedType ?? "—"),
-        );
-        this.panel.append(typeExpander);
-
-        if (!def) return;
-
-        // Property Set expander
-        const psetExpander = new Expander("ifc.propertySet");
-        psetExpander.contenxtPanel.append(
-            span({ textContent: def.psetName, className: style.propName, style: "margin-bottom:4px;" }),
-            ...Object.entries(def.pset).map(([k, v]) => this.propRow(k, v)),
-        );
-        this.panel.append(psetExpander);
     }
 
     private propRow(name: string, value: unknown): HTMLDivElement {

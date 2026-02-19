@@ -296,6 +296,7 @@ export default {
         "viewport.mode.wireframe": "线框",
         "viewport.mode.solidAndWireframe": "实体和线框",
         "beam.depth": "梁高",
+        "ifc.assignClass": "指定IFC类",
         "ifc.component": "IFC构件",
         "ifc.noComponent": "无IFC构件",
         "ifc.propertySet": "属性集",

@@ -68,8 +68,8 @@ export class ThreeVisual implements IVisual {
 
     private createGrid(): GridHelper {
         const size = Config.instance.gridSize;
-        const totalSize = size * 200;
-        const divisions = 200;
+        const totalSize = Math.max(size * 200, 200);
+        const divisions = Math.min(Math.round(totalSize / size), 2000);
         const grid = new GridHelper(totalSize, divisions, 0x444444, 0xcccccc);
         // Rotate from XZ plane (Three.js default) to XY plane (Z-up convention)
         grid.rotation.x = Math.PI / 2;

@@ -121,6 +121,7 @@ export default {
         "ribbon.group.bimElements": "Bauteile",
         "ribbon.tab.bim": "BIM",
         "beam.depth": "Trägerhöhe",
+        "ifc.assignClass": "IFC-Klasse zuweisen",
         "ifc.component": "IFC-Komponente",
         "ifc.noComponent": "Keine IFC-Komponente",
         "ifc.propertySet": "Eigenschaftssatz",

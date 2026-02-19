@@ -121,6 +121,7 @@ export default {
         "ribbon.group.bimElements": "Éléments",
         "ribbon.tab.bim": "BIM",
         "beam.depth": "Hauteur de poutre",
+        "ifc.assignClass": "Attribuer une classe IFC",
         "ifc.component": "Composant IFC",
         "ifc.noComponent": "Aucun composant IFC",
         "ifc.propertySet": "Ensemble de propriétés",

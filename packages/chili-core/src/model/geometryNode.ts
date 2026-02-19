@@ -25,6 +25,14 @@ export class FaceMaterialPair {
 
 export abstract class GeometryNode extends VisualNode {
     @serialze()
+    get ifcType(): string | undefined {
+        return this.getPrivateValue("ifcType", undefined);
+    }
+    set ifcType(value: string | undefined) {
+        this.setProperty("ifcType", value);
+    }
+
+    @serialze()
     @property("common.material", { type: "materialId" })
     get materialId(): string | string[] {
         return this.getPrivateValue("materialId");

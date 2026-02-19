@@ -19,7 +19,7 @@ export abstract class PlaneSnapBase implements ISnap {
         if (!point) return undefined;
 
         if (Config.instance.gridSnap) {
-            point = PlaneSnapBase.quantizeToGrid(point);
+            point = PlaneSnapBase.quantizeToGrid(point, plane);
         }
 
         const distance = this.refPoint ? this.refPoint().distanceTo(point) : undefined;
@@ -32,13 +32,12 @@ export abstract class PlaneSnapBase implements ISnap {
         };
     }
 
-    static quantizeToGrid(point: XYZ): XYZ {
+    static quantizeToGrid(point: XYZ, plane: Plane): XYZ {
         const g = Config.instance.gridSize;
-        return new XYZ(
-            Math.round(point.x / g) * g,
-            Math.round(point.y / g) * g,
-            Math.round(point.z / g) * g,
-        );
+        const local = point.sub(plane.origin);
+        const s = Math.round(local.dot(plane.xvec) / g) * g;
+        const t = Math.round(local.dot(plane.yvec) / g) * g;
+        return plane.origin.add(plane.xvec.multiply(s)).add(plane.yvec.multiply(t));
     }
 }
 

@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import {
@@ -58,11 +58,9 @@ export class SlabNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("thickness", v);
     }
 
-    /** IFC entity type marker — read by IFCXSerializer on export. */
-    readonly ifcType = "IfcSlab";
-
     constructor(document: IDocument, plane: Plane, dx: number, dy: number, thickness = 0.2) {
         super(document);
+        this.setPrivateValue("ifcType", "IfcSlab");
         this.setPrivateValue("plane", plane);
         this.setPrivateValue("dx", dx);
         this.setPrivateValue("dy", dy);

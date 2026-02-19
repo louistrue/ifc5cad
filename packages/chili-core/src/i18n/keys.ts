@@ -294,6 +294,7 @@ const I18N_KEYS = [
     "beam.depth",
     "beam.width",
     "column.depth",
+    "ifc.assignClass",
     "ifc.component",
     "ifc.noComponent",
     "ifc.propertySet",

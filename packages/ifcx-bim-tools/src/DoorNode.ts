@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import {
@@ -130,11 +130,9 @@ export class DoorNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("thickness", v);
     }
 
-    /** IFC entity type marker — read by IFCXSerializer on export. */
-    readonly ifcType = "IfcDoor";
-
     constructor(document: IDocument, pos: XYZ, normal: XYZ, width = 0.9, height = 2.1, thickness = 0.2) {
         super(document);
+        this.setPrivateValue("ifcType", "IfcDoor");
         this.setPrivateValue("posX", pos.x);
         this.setPrivateValue("posY", pos.y);
         this.setPrivateValue("posZ", pos.z);

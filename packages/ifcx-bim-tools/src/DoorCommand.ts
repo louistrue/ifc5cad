@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import { type IStep, MultistepCommand, PointOnPlaneStep, SelectShapeStep } from "chili";
@@ -109,7 +109,7 @@ export class DoorCommand extends MultistepCommand {
     }
 
     protected override executeMainTask(): void {
-        Transaction.execute(this.document, `excute ${Object.getPrototypeOf(this).data.name}`, () => {
+        Transaction.execute(this.document, `execute ${Object.getPrototypeOf(this).data.name}`, () => {
             const shapeData = this.stepDatas[0].shapes[0];
             const face = shapeData.shape as IFace;
             const [, faceNormal] = face.normal(0, 0);

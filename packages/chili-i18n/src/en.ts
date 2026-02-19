@@ -297,6 +297,7 @@ export default {
         "viewport.mode.wireframe": "Wireframe",
         "viewport.mode.solidAndWireframe": "Solid And Wireframe",
         "beam.depth": "Depth",
+        "ifc.assignClass": "Assign IFC Class",
         "ifc.component": "IFC Component",
         "ifc.noComponent": "No IFC component",
         "ifc.propertySet": "Property Set",
