@@ -1,8 +1,8 @@
 // Part of the IFCstudio Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
-import type { IDocument, INode, INodeLinkedList } from "chili-core";
-import { NodeUtils } from "chili-core";
+import type { FaceMeshData, IDocument, INode, INodeLinkedList } from "chili-core";
+import { GeometryNode, NodeUtils } from "chili-core";
 import type { IFCXDocument, IFCXNode } from "./IFCXDocument";
 
 /**
@@ -30,6 +30,31 @@ const IDENTITY_XFORM = {
     orientation: [0, 0, 0, 1],
     scale: [1, 1, 1],
 };
+
+/**
+ * Default IFC class assigned to geometry nodes with no specific IFC type.
+ * IfcBuildingElementProxy is the official fallback for generic elements.
+ */
+const IFC_ELEMENT_PROXY = {
+    code: "IfcBuildingElementProxy",
+    uri: "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/IfcBuildingElementProxy",
+};
+
+/**
+ * Converts a Chili3D FaceMeshData to a usd::usdgeom::mesh attribute object.
+ * points: array of [x, y, z] triples.
+ * faceVertexIndices: flat triangle index list.
+ * faceVertexCounts: all 3s (pure triangle mesh).
+ */
+function faceMeshToUsdGeomMesh(faces: FaceMeshData): Record<string, unknown> {
+    const points: number[][] = [];
+    for (let i = 0; i < faces.position.length; i += 3) {
+        points.push([faces.position[i], faces.position[i + 1], faces.position[i + 2]]);
+    }
+    const faceVertexIndices = Array.from(faces.index);
+    const faceVertexCounts = new Array(faces.index.length / 3).fill(3);
+    return { points, faceVertexIndices, faceVertexCounts };
+}
 
 /**
  * Generates a UUID v4 string.
@@ -76,12 +101,25 @@ function walkNode(node: INode, output: IFCXNode[]): string {
         }
     }
 
+    const attributes: Record<string, unknown> = {
+        "usd::Xform": IDENTITY_XFORM,
+    };
+
+    // Geometry nodes get a default IFC class so IFCX viewers can classify them.
+    // If mesh tessellation is already available (WASM kernel initialised),
+    // export it as usd::usdgeom::mesh; otherwise the class alone acts as fallback.
+    if (node instanceof GeometryNode) {
+        attributes["bsi::ifc::class"] = IFC_ELEMENT_PROXY;
+        const faces = node.mesh.faces;
+        if (faces && faces.index.length > 0) {
+            attributes["usd::usdgeom::mesh"] = faceMeshToUsdGeomMesh(faces);
+        }
+    }
+
     const ifcxNode: IFCXNode = {
         path: id,
         ...(Object.keys(children).length > 0 ? { children } : {}),
-        attributes: {
-            "usd::Xform": IDENTITY_XFORM,
-        },
+        attributes,
     };
 
     output.push(ifcxNode);
