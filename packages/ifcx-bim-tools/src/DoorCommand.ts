@@ -91,6 +91,8 @@ export class DoorCommand extends MultistepCommand {
         return {
             plane: () => facePlane,
             preview: (pt: XYZ | undefined): ShapeMeshData[] => this.previewDoor(pt, faceNormal),
+            prompt: () =>
+                `W=${this._width.toFixed(2)} m  H=${this._height.toFixed(2)} m`,
         };
     };
 

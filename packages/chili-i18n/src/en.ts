@@ -307,6 +307,7 @@ export default {
         "column.height": "Height",
         "column.width": "Width",
         "slab.thickness": "Thickness",
+        "slab.flipUp": "Flip Up",
         "wall.height": "Height",
         "wall.thickness": "Thickness",
         "door.height": "Height",

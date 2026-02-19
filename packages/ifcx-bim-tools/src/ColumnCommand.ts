@@ -2,7 +2,7 @@
 // See LICENSE file in the project root for full license information.
 
 import { type GeometryNode, Plane, Precision, XYZ, command, property } from "chili-core";
-import { CreateCommand, LengthAtAxisStep, PointStep, type IStep, type LengthAtAxisSnapData } from "chili";
+import { CreateCommand, LengthAtAxisStep, PointStep, type IStep, type LengthAtAxisSnapData, type SnapResult } from "chili";
 import { ColumnNode } from "./ColumnNode";
 
 /**
@@ -49,10 +49,17 @@ export class ColumnCommand extends CreateCommand {
     }
 
     private readonly getHeightData = (): LengthAtAxisSnapData => {
+        const base = this.stepDatas[0].point!;
         return {
-            point: this.stepDatas[0].point!,
+            point: base,
             direction: XYZ.unitZ,
             preview: this.previewColumn,
+            prompt: (snap: SnapResult) => {
+                const pt = snap.point;
+                if (!pt) return "";
+                const h = Math.abs(pt.sub(base).dot(XYZ.unitZ));
+                return `H=${h.toFixed(2)} m  W=${this._width.toFixed(2)} m  D=${this._depth.toFixed(2)} m`;
+            },
         };
     };
 

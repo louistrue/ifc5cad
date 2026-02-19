@@ -9,7 +9,7 @@ import {
     command,
     property,
 } from "chili-core";
-import { CreateCommand, type IStep, PointStep } from "chili";
+import { CreateCommand, type IStep, PointStep, type SnapResult } from "chili";
 import { StairNode } from "./StairNode";
 
 /**
@@ -71,6 +71,15 @@ export class StairCommand extends CreateCommand {
         return {
             refPoint: () => base,
             preview: this.previewStair,
+            prompt: (snap: SnapResult) => {
+                const pt = snap.point;
+                if (!pt) return "";
+                const rise = Math.abs(pt.z - base.z);
+                const run = new XYZ(pt.x - base.x, pt.y - base.y, 0).length();
+                if (rise < Precision.Distance || run < Precision.Distance) return "";
+                const n = Math.max(1, Math.round(rise / this._riserHeight));
+                return `Run=${run.toFixed(2)} m  Rise=${rise.toFixed(2)} m  Steps=${n}`;
+            },
         };
     };
 

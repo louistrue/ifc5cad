@@ -131,6 +131,7 @@ export default {
         "column.height": "Höhe",
         "column.width": "Breite",
         "slab.thickness": "Dicke",
+        "slab.flipUp": "Nach oben",
         "wall.height": "Höhe",
         "wall.thickness": "Dicke",
         "door.height": "Höhe",

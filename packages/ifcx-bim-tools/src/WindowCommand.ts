@@ -100,6 +100,8 @@ export class WindowCommand extends MultistepCommand {
         return {
             plane: () => facePlane,
             preview: (pt: XYZ | undefined): ShapeMeshData[] => this.previewWindow(pt, faceNormal),
+            prompt: () =>
+                `W=${this._width.toFixed(2)} m  H=${this._height.toFixed(2)} m  Sill=${this._sillHeight.toFixed(2)} m`,
         };
     };
 

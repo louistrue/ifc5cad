@@ -2,7 +2,7 @@
 // See LICENSE file in the project root for full license information.
 
 import { type GeometryNode, Plane, Precision, XYZ, command, property } from "chili-core";
-import { CreateCommand, type IStep, PointStep } from "chili";
+import { CreateCommand, type IStep, PointStep, type SnapResult } from "chili";
 import { WallNode } from "./WallNode";
 
 /**
@@ -53,6 +53,12 @@ export class WallCommand extends CreateCommand {
         return {
             refPoint: () => start,
             preview: this.previewWall,
+            prompt: (snap: SnapResult) => {
+                const pt = snap.point;
+                if (!pt) return "";
+                const len = pt.distanceTo(start);
+                return `L=${len.toFixed(2)} m  H=${this._height.toFixed(2)} m  t=${this._thickness.toFixed(2)} m`;
+            },
         };
     };
 

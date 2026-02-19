@@ -174,12 +174,15 @@ export class StairNode extends ParameterShapeNode {
         targetRiserHeight: number,
         thickness: number,
     ): Result<IShape> {
-        const rise = top.z - base.z;
+        // Auto-detect direction: ensure rise is always positive (base = lower point)
+        const [actualBase, actualTop] = top.z < base.z ? [top, base] : [base, top];
+
+        const rise = actualTop.z - actualBase.z;
         if (Math.abs(rise) < Precision.Distance) {
             return Result.err("Stair must have a height difference");
         }
 
-        const runVec2D = new XYZ(top.x - base.x, top.y - base.y, 0);
+        const runVec2D = new XYZ(actualTop.x - actualBase.x, actualTop.y - actualBase.y, 0);
         const horizontalRun = runVec2D.length();
         if (horizontalRun < Precision.Distance) {
             return Result.err("Stair must have horizontal distance");
@@ -195,7 +198,7 @@ export class StairNode extends ParameterShapeNode {
         const widthDir = XYZ.unitZ.cross(runDir).normalize()!;
 
         // Profile origin: offset by -width/2 in width direction
-        const profileOrigin = base.sub(widthDir.multiply(width / 2));
+        const profileOrigin = actualBase.sub(widthDir.multiply(width / 2));
 
         // Build stepped profile in the run-Z plane
         const pts = StairNode.stairProfilePoints(
@@ -204,6 +207,7 @@ export class StairNode extends ParameterShapeNode {
             numSteps,
             actualTread,
             actualRiser,
+            thickness,
         );
 
         const wire = factory.polygon(pts);
@@ -222,7 +226,7 @@ export class StairNode extends ParameterShapeNode {
     }
 
     /**
-     * Compute the closed stair profile polygon points.
+     * Compute the closed stair profile polygon points with structural thickness.
      *
      * Side view (X = run direction, Z = up):
      * ```
@@ -230,10 +234,10 @@ export class StairNode extends ParameterShapeNode {
      *      ┌──┘  │
      *   ┌──┘     │
      *   │        │
-     *   └────────┘  ← diagonal soffit (polygon closes from top-back to origin)
+     *   └────────┘  ← parallel soffit (offset perpendicular to stair diagonal)
      * ```
-     * The polygon is closed by the factory from the last tread end back to
-     * the origin, producing a sloped soffit — the standard architectural look.
+     * The soffit runs parallel to the stair diagonal, offset inward by `thickness`
+     * measured perpendicular to that diagonal — giving the stair structural depth.
      */
     static stairProfilePoints(
         origin: XYZ,
@@ -241,9 +245,18 @@ export class StairNode extends ParameterShapeNode {
         numSteps: number,
         tread: number,
         riser: number,
+        thickness: number,
     ): XYZLike[] {
+        const totalRun = numSteps * tread;
+        const totalRise = numSteps * riser;
+        const diagLen = Math.sqrt(totalRun * totalRun + totalRise * totalRise);
+        // Components of the unit normal perpendicular to the stair diagonal (pointing inward/downward)
+        const sinA = totalRise / diagLen; // run-axis component of inward normal
+        const cosA = totalRun / diagLen;  // Z-axis component of inward normal
+
         const pts: XYZLike[] = [];
 
+        // ── Stepped top profile (front face) ─────────────────────────────────
         // Start at the foot of the first riser (base point at floor level)
         pts.push(origin);
 
@@ -261,8 +274,20 @@ export class StairNode extends ParameterShapeNode {
             );
         }
 
-        // The factory closes the polygon from the last tread end back to origin,
-        // creating the diagonal soffit automatically.
+        // ── Parallel soffit (back face, inset by thickness) ───────────────────
+        // back-bottom corner: perpendicular offset from last tread end
+        pts.push(
+            origin
+                .add(runDir.multiply(totalRun + thickness * sinA))
+                .add(XYZ.unitZ.multiply(totalRise - thickness * cosA)),
+        );
+        // front-bottom corner: perpendicular offset from origin
+        pts.push(
+            origin
+                .add(runDir.multiply(thickness * sinA))
+                .add(XYZ.unitZ.multiply(-thickness * cosA)),
+        );
+        // Polygon closes from front-bottom back to origin.
         return pts;
     }
 }

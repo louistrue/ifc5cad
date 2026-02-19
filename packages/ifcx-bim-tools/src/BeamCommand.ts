@@ -2,7 +2,7 @@
 // See LICENSE file in the project root for full license information.
 
 import { type GeometryNode, Plane, Precision, XYZ, command, property } from "chili-core";
-import { CreateCommand, type IStep, PointStep } from "chili";
+import { CreateCommand, type IStep, PointStep, type SnapResult } from "chili";
 import { BeamNode } from "./BeamNode";
 
 /**
@@ -54,6 +54,12 @@ export class BeamCommand extends CreateCommand {
         return {
             refPoint: () => start,
             preview: this.previewBeam,
+            prompt: (snap: SnapResult) => {
+                const pt = snap.point;
+                if (!pt) return "";
+                const span = pt.distanceTo(start);
+                return `Span=${span.toFixed(2)} m  W=${this._width.toFixed(2)} m  D=${this._depth.toFixed(2)} m`;
+            },
         };
     };
 

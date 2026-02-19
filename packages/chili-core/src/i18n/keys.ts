@@ -302,6 +302,7 @@ const I18N_KEYS = [
     "column.height",
     "column.width",
     "slab.thickness",
+    "slab.flipUp",
     "wall.height",
     "wall.thickness",
     "door.height",

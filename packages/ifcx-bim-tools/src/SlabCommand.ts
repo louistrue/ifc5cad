@@ -2,7 +2,7 @@
 // See LICENSE file in the project root for full license information.
 
 import { type GeometryNode, Plane, Precision, XYZ, command, property } from "chili-core";
-import { CreateCommand, PointOnPlaneStep, PointStep, type IStep } from "chili";
+import { CreateCommand, PointOnPlaneStep, PointStep, type IStep, type SnapResult } from "chili";
 import { SlabNode } from "./SlabNode";
 
 /**
@@ -25,6 +25,7 @@ import { SlabNode } from "./SlabNode";
 })
 export class SlabCommand extends CreateCommand {
     private _thickness = 0.3;
+    private _flipUp = false;
 
     @property("slab.thickness")
     get thickness(): number {
@@ -32,6 +33,14 @@ export class SlabCommand extends CreateCommand {
     }
     set thickness(v: number) {
         this.setProperty("thickness", v);
+    }
+
+    @property("slab.flipUp")
+    get flipUp(): boolean {
+        return this._flipUp;
+    }
+    set flipUp(v: boolean) {
+        this.setProperty("flipUp", v);
     }
 
     protected override getSteps(): IStep[] {
@@ -50,6 +59,14 @@ export class SlabCommand extends CreateCommand {
             // Horizontal plane at the same elevation as the first point
             plane: () => new Plane(start, XYZ.unitZ, XYZ.unitX),
             preview: this.previewSlab,
+            prompt: (snap: SnapResult) => {
+                const pt = snap.point;
+                if (!pt) return "";
+                const dx = Math.abs(pt.x - start.x);
+                const dy = Math.abs(pt.y - start.y);
+                if (dx < Precision.Distance && dy < Precision.Distance) return "";
+                return `${dx.toFixed(2)} × ${dy.toFixed(2)} m  t=${this._thickness.toFixed(2)} m`;
+            },
         };
     };
 
@@ -61,8 +78,8 @@ export class SlabCommand extends CreateCommand {
         return [
             this.meshPoint(start),
             this.meshPoint(end),
-            // Negative thickness: slab grows downward from the clicked level
-            this.meshCreatedShape("box", plane, dx, dy, -this._thickness),
+            // Positive thickness: slab grows upward; negative: downward from clicked level
+            this.meshCreatedShape("box", plane, dx, dy, this._flipUp ? this._thickness : -this._thickness),
         ];
     };
 
@@ -85,6 +102,8 @@ export class SlabCommand extends CreateCommand {
     protected override geometryNode(): GeometryNode {
         const end = this.stepDatas[1].point!;
         const { plane, dx, dy } = this.slabRect(end);
-        return new SlabNode(this.document, plane, dx, dy, this._thickness);
+        // SlabNode.generateShape applies -thickness, so negate for upward direction
+        const signedThickness = this._flipUp ? -this._thickness : this._thickness;
+        return new SlabNode(this.document, plane, dx, dy, signedThickness);
     }
 }

@@ -306,6 +306,7 @@ export default {
         "column.height": "高度",
         "column.width": "宽度",
         "slab.thickness": "厚度",
+        "slab.flipUp": "向上",
         "wall.height": "高度",
         "wall.thickness": "厚度",
         "door.height": "高度",
