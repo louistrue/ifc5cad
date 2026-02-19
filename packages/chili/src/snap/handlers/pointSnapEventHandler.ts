@@ -126,7 +126,8 @@ export class PointSnapEventHandler extends SnapEventHandler<PointSnapData> {
     }
 
     private isValidDimension(dimension: Dimension): boolean {
-        return DimensionUtils.contains(this.data.dimension!, dimension);
+        // If no dimension constraint is specified, all dimensions are valid.
+        return DimensionUtils.contains(this.data.dimension ?? Dimension.D1D2D3, dimension);
     }
 
     private hasInvalidNumbers(dims: number[]): boolean {
