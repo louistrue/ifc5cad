@@ -1,32 +1,40 @@
 // Part of the IFCstudio Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
-import { type IStep, MultistepCommand, PointStep, SelectShapeStep } from "chili";
+import { type IStep, MultistepCommand, PointOnPlaneStep, SelectShapeStep } from "chili";
 import {
-    command,
+    EditableShapeNode,
     type IFace,
     Plane,
     Precision,
-    property,
     type ShapeMeshData,
+    type ShapeNode,
     ShapeType,
     Transaction,
     VisualState,
     XYZ,
+    command,
+    property,
 } from "chili-core";
 import { WallNode } from "./WallNode";
 import { WindowNode } from "./WindowNode";
 
 /**
- * Place a window relative to a host wall face.
+ * Place a window relative to a host wall face, with a boolean void cut.
  *
  * Workflow:
- *  1. Click a vertical wall face → face normal is captured.
- *  2. Click the horizontal centre of the opening on that face → window is created,
- *     flush with the outer face, raised from floor level by sillHeight.
+ *  1. Click a vertical wall face → face normal is captured; wall goes transparent.
+ *  2. Click the horizontal centre of the opening ON THAT FACE — the cursor is
+ *     constrained to the face plane so it cannot drift off the surface.
  *
- * Thickness is automatically read from the host WallNode when available.
- * The window node is inserted as a sibling of the wall node in the scene tree.
+ * On confirmation the command:
+ *  a) Cuts the opening void from the host wall using booleanCut, replacing
+ *     the wall solid with the result.
+ *  b) Inserts a WindowNode (for IFC export + property editing) as a sibling.
+ *
+ * Falls back to plain insertion (no cut) if the boolean operation fails.
+ * Wall thickness is read automatically from WallNode; otherwise the command
+ * property is used.
  */
 @command({
     key: "bim.window",
@@ -72,21 +80,25 @@ export class WindowCommand extends MultistepCommand {
 
     protected override getSteps(): IStep[] {
         return [
-            // Step 0: select the wall face → get its outward normal + host node
+            // Step 0: select the wall face — captures face normal + host node
             new SelectShapeStep(ShapeType.Face, "prompt.select.faces", {
                 selectedState: VisualState.faceTransparent,
             }),
-            // Step 1: pick the window centre on that face
-            new PointStep("prompt.pickFistPoint", this.getPositionData, true),
+            // Step 1: pick window centre, constrained to the selected face plane
+            new PointOnPlaneStep("prompt.pickFistPoint", this.getPositionData, true),
         ];
     }
 
-    /** Builds the PointStep snap data once the face has been selected (step 0 done). */
+    /** Always returns a valid PointSnapData with the face plane. */
     private readonly getPositionData = () => {
         const face = this.stepDatas[0]?.shapes[0]?.shape as IFace | undefined;
-        if (!face) return {};
-        const [, faceNormal] = face.normal(0, 0);
+        const [facePoint, faceNormal] = face ? face.normal(0, 0) : [XYZ.zero, XYZ.unitX];
+        const xvec = faceNormal.cross(XYZ.unitZ);
+        const xvecNorm = xvec.length() > Precision.Distance ? xvec.normalize()! : XYZ.unitY;
+        // The face plane: normal = faceNormal keeps all picks on the face surface
+        const facePlane = new Plane(facePoint, faceNormal, xvecNorm);
         return {
+            plane: () => facePlane,
             preview: (pt: XYZ | undefined): ShapeMeshData[] => this.previewWindow(pt, faceNormal),
         };
     };
@@ -96,14 +108,14 @@ export class WindowCommand extends MultistepCommand {
         const xvec = faceNormal.cross(XYZ.unitZ);
         if (xvec.length() < Precision.Distance) return [];
         const xvecNorm = xvec.normalize()!;
-        const thickness = this.hostThickness();
+        const t = this.hostThickness();
         const bottomZ = pt.z + this._sillHeight;
         const winPos = new XYZ(pt.x, pt.y, bottomZ);
-        const origin = winPos.sub(xvecNorm.multiply(this._width / 2)).sub(faceNormal.multiply(thickness));
+        const origin = winPos.sub(xvecNorm.multiply(this._width / 2)).sub(faceNormal.multiply(t));
         const plane = new Plane(origin, XYZ.unitZ, xvecNorm);
         return [
             this.meshPoint(pt),
-            this.meshCreatedShape("box", plane, this._width, thickness, this._height),
+            this.meshCreatedShape("box", plane, this._width, t, this._height),
         ];
     }
 
@@ -116,6 +128,7 @@ export class WindowCommand extends MultistepCommand {
             const hostNode = shapeData.owner.node;
             const thickness = this.hostThickness();
 
+            // IFC element node — preserved as sibling for export and property editing
             const windowNode = new WindowNode(
                 this.document,
                 clickPoint,
@@ -126,18 +139,76 @@ export class WindowCommand extends MultistepCommand {
                 this._sillHeight,
             );
 
-            // Insert immediately after the host wall in the scene tree
-            if (hostNode.parent) {
-                hostNode.parent.insertAfter(hostNode, windowNode);
-            } else {
-                this.document.modelManager.addNode(windowNode);
-            }
-
+            this.cutAndInsert(hostNode, faceNormal, clickPoint, thickness, windowNode);
             this.document.visual.update();
         });
     }
 
-    /** Read wall thickness from host WallNode; fall back to command property. */
+    /**
+     * Cut the opening void from the host wall, replace the wall solid with the
+     * result, and insert the BIM element node as a sibling. Falls back to plain
+     * sibling insertion if the boolean fails.
+     *
+     * The void spans the sill-to-top range in Z so only the glazed area is cut;
+     * the sill zone below remains solid wall.
+     */
+    private cutAndInsert(
+        hostNode: ReturnType<typeof Object.getPrototypeOf>,
+        faceNormal: XYZ,
+        centre: XYZ,
+        thickness: number,
+        elementNode: WindowNode,
+    ): void {
+        const eps = 0.005; // 5 mm clearance for clean boolean
+        const xvec = faceNormal.cross(XYZ.unitZ);
+        const xvecNorm = xvec.length() > Precision.Distance ? xvec.normalize()! : XYZ.unitY;
+
+        // Void starts at the sill height, cuts only the glazed opening
+        const voidBottomZ = centre.z + this._sillHeight;
+        const voidOrigin = new XYZ(centre.x, centre.y, voidBottomZ)
+            .sub(xvecNorm.multiply((this._width + eps) / 2))
+            .sub(faceNormal.multiply(thickness + eps));
+        const voidPlane = new Plane(voidOrigin, XYZ.unitZ, xvecNorm);
+        const voidResult = this.document.application.shapeFactory.box(
+            voidPlane,
+            this._width + eps,
+            thickness + 2 * eps,
+            this._height + eps,
+        );
+
+        const hostShapeNode = hostNode as ShapeNode;
+        if (voidResult.isOk && hostShapeNode.shape?.isOk) {
+            const cutResult = this.document.application.shapeFactory.booleanCut(
+                [hostShapeNode.shape.value],
+                [voidResult.value],
+            );
+            if (cutResult.isOk) {
+                const cutWall = new EditableShapeNode(
+                    this.document,
+                    hostNode.name,
+                    cutResult,
+                    hostShapeNode.materialId,
+                );
+                if (hostNode.parent) {
+                    hostNode.parent.insertAfter(hostNode, cutWall);
+                    hostNode.parent.insertAfter(cutWall, elementNode);
+                    hostNode.parent.remove(hostNode);
+                } else {
+                    this.document.modelManager.addNode(cutWall);
+                    this.document.modelManager.addNode(elementNode);
+                }
+                return;
+            }
+        }
+
+        // Fallback: no cut, just place the element
+        if (hostNode.parent) {
+            hostNode.parent.insertAfter(hostNode, elementNode);
+        } else {
+            this.document.modelManager.addNode(elementNode);
+        }
+    }
+
     private hostThickness(): number {
         const node = this.stepDatas[0]?.shapes[0]?.owner?.node;
         if (node instanceof WallNode) return node.thickness;

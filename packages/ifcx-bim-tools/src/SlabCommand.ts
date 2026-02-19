@@ -1,19 +1,21 @@
 // Part of the IFCstudio Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
-import { type GeometryNode, Precision, type XYZ, command, property } from "chili-core";
-import { LengthAtAxisStep, RectCommandBase, type IStep, type LengthAtAxisSnapData } from "chili";
+import { type GeometryNode, Plane, Precision, XYZ, command, property } from "chili-core";
+import { CreateCommand, PointOnPlaneStep, PointStep, type IStep } from "chili";
 import { SlabNode } from "./SlabNode";
 
 /**
- * Three-click slab creation tool.
+ * Two-click slab creation tool — always horizontal (Z-up), thickness from settings.
  *
- * Usage:
- *  1. Click first corner of the slab footprint.
- *  2. Click opposite corner — footprint is defined.
- *  3. Drag downward / type value to set thickness.
+ * Workflow:
+ *  1. Click first corner of the slab footprint (sets elevation and start).
+ *  2. Click opposite corner — second click is constrained to the horizontal
+ *     plane at the elevation set in step 1, so the slab is always level.
  *
- * After creation, thickness is editable in the Properties panel.
+ * Thickness is taken directly from the tool's property panel; there is no
+ * third drag step. The slab grows downward from the clicked elevation by
+ * the specified thickness.
  *
  * IFC semantics: IfcSlabType + Pset_SlabCommon are emitted on IFCX export.
  */
@@ -21,8 +23,8 @@ import { SlabNode } from "./SlabNode";
     key: "bim.slab",
     icon: "icon-box",
 })
-export class SlabCommand extends RectCommandBase {
-    private _thickness = 0.2;
+export class SlabCommand extends CreateCommand {
+    private _thickness = 0.3;
 
     @property("slab.thickness")
     get thickness(): number {
@@ -33,34 +35,56 @@ export class SlabCommand extends RectCommandBase {
     }
 
     protected override getSteps(): IStep[] {
-        return [...super.getSteps(), new LengthAtAxisStep("prompt.pickNextPoint", this.getThicknessData)];
+        return [
+            // Step 0: free 3D pick — sets the slab elevation and first corner
+            new PointStep("prompt.pickFistPoint"),
+            // Step 1: constrained to horizontal plane at step-0 Z level
+            new PointOnPlaneStep("prompt.pickNextPoint", this.getStep2Data),
+        ];
     }
 
-    private readonly getThicknessData = (): LengthAtAxisSnapData => {
-        const plane = this.stepDatas[1].plane ?? this.stepDatas[0].view.workplane;
+    private readonly getStep2Data = () => {
+        const start = this.stepDatas[0].point!;
         return {
-            point: this.stepDatas[1].point!,
-            direction: plane.normal.multiply(-1),
+            refPoint: () => start,
+            // Horizontal plane at the same elevation as the first point
+            plane: () => new Plane(start, XYZ.unitZ, XYZ.unitX),
             preview: this.previewSlab,
         };
     };
 
     private readonly previewSlab = (end: XYZ | undefined) => {
-        if (!end) return [];
-        const rect = this.rectDataFromTwoSteps();
-        const plane = this.stepDatas[1].plane ?? this.stepDatas[0].view.workplane;
-        const h = end.sub(this.stepDatas[1].point!).dot(plane.normal);
-        const t = Math.abs(h);
-        const thickness = t < Precision.Distance ? this._thickness : t;
-        return [this.meshCreatedShape("box", rect.plane, rect.dx, rect.dy, -thickness)];
+        const start = this.stepDatas[0].point!;
+        if (!end) return [this.meshPoint(start)];
+        const { plane, dx, dy } = this.slabRect(end);
+        if (dx < Precision.Distance || dy < Precision.Distance) return [this.meshPoint(start)];
+        return [
+            this.meshPoint(start),
+            this.meshPoint(end),
+            // Negative thickness: slab grows downward from the clicked level
+            this.meshCreatedShape("box", plane, dx, dy, -this._thickness),
+        ];
     };
 
+    /**
+     * Compute an axis-aligned, always-horizontal rect from start → end.
+     * Both points share the same Z because step 1 uses PointOnPlaneStep.
+     * dx and dy are always positive; origin is the lower-left XY corner.
+     */
+    private slabRect(end: XYZ): { plane: Plane; dx: number; dy: number } {
+        const start = this.stepDatas[0].point!;
+        const dx = Math.abs(end.x - start.x);
+        const dy = Math.abs(end.y - start.y);
+        const originX = Math.min(start.x, end.x);
+        const originY = Math.min(start.y, end.y);
+        const origin = new XYZ(originX, originY, start.z);
+        const plane = new Plane(origin, XYZ.unitZ, XYZ.unitX);
+        return { plane, dx, dy };
+    }
+
     protected override geometryNode(): GeometryNode {
-        const rect = this.rectDataFromTwoSteps();
-        const p3 = this.stepDatas[2].point!;
-        const plane = this.stepDatas[1].plane ?? this.stepDatas[0].view.workplane;
-        const h = p3.sub(this.stepDatas[1].point!).dot(plane.normal);
-        const thickness = Math.abs(h) < Precision.Distance ? this._thickness : Math.abs(h);
-        return new SlabNode(this.document, rect.plane, rect.dx, rect.dy, thickness);
+        const end = this.stepDatas[1].point!;
+        const { plane, dx, dy } = this.slabRect(end);
+        return new SlabNode(this.document, plane, dx, dy, this._thickness);
     }
 }
