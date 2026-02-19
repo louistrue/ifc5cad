@@ -62,18 +62,6 @@ export const DefaultRibbon: RibbonTab[] = [
                 groupName: "ribbon.group.act",
                 items: ["act.alignCamera"],
             },
-            {
-                groupName: "ribbon.group.ifc",
-                items: ["file.exportIfcx"],
-            },
-            {
-                groupName: "ribbon.group.importExport",
-                items: ["file.import", "file.export"],
-            },
-            {
-                groupName: "ribbon.group.other",
-                items: ["wechat.group"],
-            },
         ],
     },
     {
