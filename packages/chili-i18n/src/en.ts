@@ -160,7 +160,7 @@ export default {
         "error.input.unsupportedInputs": "Exceeds the maximum number of inputs",
         "file.format": "Format",
         "home.recent": "Recent",
-        "home.welcome": "Welcome to chili3d",
+        "home.welcome": "Welcome to IFChili",
         "items.header": "Items",
         "items.tool.delete": "Delete",
         "items.tool.expandAll": "Expand All",

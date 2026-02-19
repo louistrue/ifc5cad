@@ -15,9 +15,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    padding-right: 4px;
+    padding: 3px 4px;
     border-radius: 2px;
     cursor: default;
     gap: 2px;
@@ -35,7 +33,7 @@
     opacity: 0.6;
 }
 
-/* IFC type badge: small coloured chip */
+/* IFC type badge */
 .ifcBadge {
     font-size: 9px;
     font-weight: 700;
@@ -56,12 +54,32 @@
     white-space: nowrap;
     user-select: none;
     opacity: 0.85;
+    cursor: text;
 }
 
-/* Content nested under a level */
+/* Editable name input (shown on dblclick) */
+.levelNameInput {
+    flex: 1 1 auto;
+    font-size: 12px;
+    border: 1px solid #1565c0;
+    border-radius: 2px;
+    padding: 0 2px;
+    outline: none;
+    background: var(--input-background-color, #fff);
+    color: inherit;
+    min-width: 0;
+}
+
+/*
+ * Children of each level are indented via cascading padding-left.
+ * Four nested levelContent divs → 4 × 14 px = 56 px before the Tree.
+ */
 .levelContent {
     display: flex;
     flex-direction: column;
+    padding-left: 14px;
+    border-left: 1px solid rgba(21, 101, 192, 0.12);
+    margin-left: 9px;   /* aligns the border with the centre of the expand icon */
 }
 
 .collapsed {

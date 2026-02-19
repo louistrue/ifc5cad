@@ -160,7 +160,7 @@ export default {
         "error.input.unsupportedInputs": "超过最大输入数",
         "file.format": "文件格式",
         "home.recent": "最近使用",
-        "home.welcome": "欢迎使用 chili3d",
+        "home.welcome": "欢迎使用 IFChili",
         "items.header": "项目",
         "items.tool.delete": "删除",
         "items.tool.expandAll": "展开所有",

@@ -1,32 +1,29 @@
 // Part of the IFCstudio Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 //
-// IFC Spatial Panel: shows the IFC spatial hierarchy
-// (Project → Site → Building → Storey) above the scene tree.
+// IFC Spatial Panel — shows the IFC spatial hierarchy
+// (IfcProject → IfcSite → IfcBuilding → IfcBuildingStorey) above the
+// scene tree. All level names are editable via double-click.
 
 import { div, setSVGIcon, span, svg } from "chili-controls";
-import { Binding, type IDocument } from "chili-core";
+import { type IDocument, Transaction } from "chili-core";
 import style from "./ifcSpatialPanel.module.css";
 
-/** One level of the IFC spatial hierarchy shown in the panel. */
-interface IfcLevel {
-    /** Short IFC type label shown as a badge, e.g. "IfcProject" */
-    ifcType: string;
-    /** Human-readable name — static string or a live Binding */
-    name: string | Binding;
-    /** Whether the level starts expanded */
-    defaultExpanded?: boolean;
-}
-
 /**
- * Creates a single collapsible IFC spatial row.
- * Re-uses the same visual language as TreeGroup.
+ * Creates one collapsible row of the IFC spatial hierarchy.
+ *
+ * @param ifcType     - IFC class badge text (e.g. "IfcProject")
+ * @param initialName - Starting name text
+ * @param content     - Child element nested inside this level
+ * @param onRename    - Called with the new name when the user commits an edit
+ * @param onNameEl    - Receives the nameEl span so callers can update it externally
  */
 function createSpatialRow(
     ifcType: string,
-    name: string | Binding,
-    depth: number,
+    initialName: string,
     content: HTMLElement,
+    onRename?: (newName: string) => void,
+    onNameEl?: (el: HTMLSpanElement) => void,
 ): HTMLDivElement {
     let expanded = true;
 
@@ -44,13 +41,42 @@ function createSpatialRow(
     });
 
     const badge = span({ className: style.ifcBadge, textContent: ifcType });
-    const nameEl = span({ className: style.levelName, textContent: name });
+    const nameEl = span({ className: style.levelName, textContent: initialName });
+    onNameEl?.(nameEl);
+
+    // Inline editing on double-click
+    nameEl.addEventListener("dblclick", (e: MouseEvent) => {
+        e.stopPropagation();
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.value = nameEl.textContent ?? "";
+        inp.className = style.levelNameInput;
+
+        let done = false;
+        const commit = () => {
+            if (done) return;
+            done = true;
+            const next = inp.value.trim();
+            if (next) {
+                nameEl.textContent = next;
+                onRename?.(next);
+            }
+            inp.replaceWith(nameEl);
+        };
+
+        inp.addEventListener("blur", commit);
+        inp.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") { ev.preventDefault(); commit(); }
+            else if (ev.key === "Escape") { done = true; inp.replaceWith(nameEl); }
+        });
+
+        nameEl.replaceWith(inp);
+        inp.select();
+        inp.focus();
+    });
 
     const header = div(
-        {
-            className: style.levelHeader,
-            style: `padding-left: ${4 + depth * 14}px`,
-        },
+        { className: style.levelHeader },
         expandIcon,
         badge,
         nameEl,
@@ -60,40 +86,83 @@ function createSpatialRow(
 }
 
 /**
- * IFC Spatial Panel — wraps the scene `Tree` in a visual representation
- * of the IFC spatial hierarchy (Project → Site → Building → Storey).
+ * IFC Spatial Panel — wraps the scene Tree in the IFC spatial hierarchy.
  *
- * The hierarchy reflects what would be emitted by IFCXSerializer:
- * - Project name → document.name
- * - Site name    → "Site" (fixed)
- * - Building     → document.name
- * - Storey       → document.name
+ * - IfcProject / IfcBuilding / IfcBuildingStorey names update document.name
+ *   and re-sync when document.name changes from elsewhere (e.g. Properties panel).
+ * - IfcSite name is panel-local (editable, not yet mapped to a model property).
  *
- * Names are kept live via Binding so renaming the document updates labels.
+ * Visual indentation comes from CSS (each `.levelContent` adds left padding),
+ * so the tree content is naturally nested at the deepest level.
  */
 export class IfcSpatialPanel extends HTMLElement {
-    /**
-     * @param document - The active IDocument (provides document name bindings)
-     * @param tree     - Pre-created Tree instance owned by the caller (ProjectView)
-     */
-    constructor(document: IDocument, tree: HTMLElement) {
+    private _projectNameEl: HTMLSpanElement | undefined;
+    private _buildingNameEl: HTMLSpanElement | undefined;
+    private _storeyNameEl: HTMLSpanElement | undefined;
+
+    private readonly _onDocPropertyChanged: (property: keyof IDocument) => void;
+
+    constructor(private readonly _document: IDocument, tree: HTMLElement) {
         super();
         this.className = style.root;
 
-        const levels: IfcLevel[] = [
-            { ifcType: "IfcProject", name: new Binding(document, "name") },
-            { ifcType: "IfcSite", name: "Site" },
-            { ifcType: "IfcBuilding", name: new Binding(document, "name") },
-            { ifcType: "IfcBuildingStorey", name: new Binding(document, "name") },
-        ];
+        const docName = _document.name;
 
-        // Build from innermost level outward so each wraps the next
+        // Build from innermost to outermost
         let content: HTMLElement = tree;
-        for (let i = levels.length - 1; i >= 0; i--) {
-            content = createSpatialRow(levels[i].ifcType, levels[i].name, i, content);
-        }
+
+        content = createSpatialRow(
+            "IfcBuildingStorey", docName, content,
+            (name) => {
+                if (this._storeyNameEl) this._storeyNameEl.textContent = name;
+                // Storey name is panel-local; update document.name only if user
+                // explicitly edits via the Project level.
+            },
+            (el) => { this._storeyNameEl = el; },
+        );
+
+        content = createSpatialRow(
+            "IfcBuilding", docName, content,
+            (name) => {
+                if (this._buildingNameEl) this._buildingNameEl.textContent = name;
+            },
+            (el) => { this._buildingNameEl = el; },
+        );
+
+        content = createSpatialRow(
+            "IfcSite", "Site", content,
+            undefined,  // Site keeps its own value
+            undefined,
+        );
+
+        content = createSpatialRow(
+            "IfcProject", docName, content,
+            (name) => {
+                Transaction.execute(_document, `rename: ${_document.name}`, () => {
+                    _document.name = name;
+                });
+                // Keep building / storey in sync too
+                if (this._buildingNameEl) this._buildingNameEl.textContent = name;
+                if (this._storeyNameEl) this._storeyNameEl.textContent = name;
+            },
+            (el) => { this._projectNameEl = el; },
+        );
 
         this.append(content);
+
+        // Keep Project (and companions) in sync when document.name changes externally
+        this._onDocPropertyChanged = (property) => {
+            if (property === "name") {
+                if (this._projectNameEl) this._projectNameEl.textContent = _document.name;
+                if (this._buildingNameEl) this._buildingNameEl.textContent = _document.name;
+                if (this._storeyNameEl) this._storeyNameEl.textContent = _document.name;
+            }
+        };
+        _document.onPropertyChanged(this._onDocPropertyChanged as any);
+    }
+
+    override disconnectedCallback() {
+        this._document.removePropertyChanged(this._onDocPropertyChanged as any);
     }
 }
 
