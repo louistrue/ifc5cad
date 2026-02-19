@@ -32,10 +32,10 @@ const ZOOM_SPEED_FACTOR = 0.1;
 const ROTATE_SPEED_FACTOR = 0.5;
 const PAN_SPEED_FACTOR = 0.002;
 const CAMERA_FOV = 50;
-const CAMERA_NEAR = 0.1;
-const CAMERA_FAR = 1e6;
-const MIN_CARME_TO_TARGET = 50;
-const SHAPE_EMPTY_SIZE = 800;
+const CAMERA_NEAR = 0.01;
+const CAMERA_FAR = 1e5;
+const MIN_CARME_TO_TARGET = 1;
+const SHAPE_EMPTY_SIZE = 50;
 
 Camera.DEFAULT_UP = new Vector3(0, 0, 1);
 
@@ -43,7 +43,7 @@ export class CameraController extends Observable implements ICameraController {
     private _width: number = 100;
     private _height: number = 100;
     private _target: Vector3 = new Vector3();
-    private _position: Vector3 = new Vector3(1500, 1500, 1500);
+    private _position: Vector3 = new Vector3(35, 35, 35);
     private _rotateCenter: Vector3 | undefined;
     private _camera: PerspectiveCamera | OrthographicCamera;
 

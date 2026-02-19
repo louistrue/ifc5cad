@@ -204,7 +204,6 @@ export class StairNode extends ParameterShapeNode {
             numSteps,
             actualTread,
             actualRiser,
-            thickness,
         );
 
         const wire = factory.polygon(pts);
@@ -230,9 +229,11 @@ export class StairNode extends ParameterShapeNode {
      *         ┌──┐
      *      ┌──┘  │
      *   ┌──┘     │
-     *   │ thickness
-     *   └────────┘
+     *   │        │
+     *   └────────┘  ← diagonal soffit (polygon closes from top-back to origin)
      * ```
+     * The polygon is closed by the factory from the last tread end back to
+     * the origin, producing a sloped soffit — the standard architectural look.
      */
     static stairProfilePoints(
         origin: XYZ,
@@ -240,35 +241,28 @@ export class StairNode extends ParameterShapeNode {
         numSteps: number,
         tread: number,
         riser: number,
-        thickness: number,
     ): XYZLike[] {
         const pts: XYZLike[] = [];
 
-        // Bottom-front (below base, structural slab underside)
-        pts.push(origin.add(XYZ.unitZ.multiply(-thickness)));
-        // Base point (foot of first riser)
+        // Start at the foot of the first riser (base point at floor level)
         pts.push(origin);
 
-        // Stepped profile: for each step, go up (riser) then forward (tread)
+        // Stepped profile: for each step go up (riser) then forward (tread)
         for (let i = 0; i < numSteps; i++) {
-            const topOfRiser = origin
-                .add(runDir.multiply(i * tread))
-                .add(XYZ.unitZ.multiply((i + 1) * riser));
-            pts.push(topOfRiser);
-
-            const endOfTread = origin
-                .add(runDir.multiply((i + 1) * tread))
-                .add(XYZ.unitZ.multiply((i + 1) * riser));
-            pts.push(endOfTread);
+            pts.push(
+                origin
+                    .add(runDir.multiply(i * tread))
+                    .add(XYZ.unitZ.multiply((i + 1) * riser)),
+            );
+            pts.push(
+                origin
+                    .add(runDir.multiply((i + 1) * tread))
+                    .add(XYZ.unitZ.multiply((i + 1) * riser)),
+            );
         }
 
-        // Bottom-back (below top landing, structural slab underside)
-        pts.push(
-            origin
-                .add(runDir.multiply(numSteps * tread))
-                .add(XYZ.unitZ.multiply(-thickness)),
-        );
-
+        // The factory closes the polygon from the last tread end back to origin,
+        // creating the diagonal soffit automatically.
         return pts;
     }
 }
