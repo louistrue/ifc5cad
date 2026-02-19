@@ -46,9 +46,15 @@ const IFC_ELEMENT_PROXY = {
  * Duck-typed against the `ifcType` property on geometry nodes to avoid circular
  * imports between ifcx-core and ifcx-bim-tools.
  */
+/** Base URI for buildingSMART IFC class identifiers (IFC4.3). */
+const IFC_CLASS_URI_BASE = "https://identifier.buildingsmart.org/uri/buildingsmart/ifc/4.3/class/";
+
 const IFC_TYPE_DEFAULTS: Record<
     string,
     {
+        /** IFC instance class code (used for bsi::ifc::class). */
+        classCode: string;
+        /** IFCX typed-schema key emitted as an additional component. */
         schemaKey: string;
         typeData: Record<string, unknown>;
         psetKey?: string;
@@ -56,42 +62,49 @@ const IFC_TYPE_DEFAULTS: Record<
     }
 > = {
     IfcWall: {
+        classCode: "IfcWall",
         schemaKey: "bsi::ifc::v5a::schema::IfcWallType",
         typeData: { predefinedType: "STANDARD" },
         psetKey: "bsi::ifc::v5a::prop::Pset_WallCommon",
         psetData: { IsExternal: false, LoadBearing: false, FireRating: "", ThermalTransmittance: null },
     },
     IfcSlab: {
+        classCode: "IfcSlab",
         schemaKey: "bsi::ifc::v5a::schema::IfcSlabType",
         typeData: { predefinedType: "FLOOR" },
         psetKey: "bsi::ifc::v5a::prop::Pset_SlabCommon",
         psetData: { IsExternal: false, LoadBearing: false, FireRating: "" },
     },
     IfcColumn: {
+        classCode: "IfcColumn",
         schemaKey: "bsi::ifc::v5a::schema::IfcColumnType",
         typeData: { predefinedType: "COLUMN" },
         psetKey: "bsi::ifc::v5a::prop::Pset_ColumnCommon",
         psetData: { IsExternal: false, LoadBearing: true },
     },
     IfcBeam: {
+        classCode: "IfcBeam",
         schemaKey: "bsi::ifc::v5a::schema::IfcBeamType",
         typeData: { predefinedType: "BEAM" },
         psetKey: "bsi::ifc::v5a::prop::Pset_BeamCommon",
         psetData: { IsExternal: false, LoadBearing: true },
     },
     IfcDoor: {
+        classCode: "IfcDoor",
         schemaKey: "bsi::ifc::v5a::schema::IfcDoorType",
         typeData: { predefinedType: "DOOR" },
         psetKey: "bsi::ifc::v5a::prop::Pset_DoorCommon",
         psetData: { IsExternal: false, HandicapAccessible: false, FireRating: "" },
     },
     IfcWindow: {
+        classCode: "IfcWindow",
         schemaKey: "bsi::ifc::v5a::schema::IfcWindowType",
         typeData: { predefinedType: "WINDOW" },
         psetKey: "bsi::ifc::v5a::prop::Pset_WindowCommon",
         psetData: { IsExternal: false, FireRating: "", ThermalTransmittance: null },
     },
     IfcStair: {
+        classCode: "IfcStair",
         schemaKey: "bsi::ifc::v5a::schema::IfcStairType",
         typeData: { predefinedType: "STRAIGHT_RUN_STAIR" },
         psetKey: "bsi::ifc::v5a::prop::Pset_StairCommon",
@@ -172,7 +185,13 @@ function walkNode(node: INode, output: IFCXNode[]): string {
         const ifcDef = ifcType ? IFC_TYPE_DEFAULTS[ifcType] : undefined;
 
         if (ifcDef) {
-            // BIM element: use typed IFC attributes + property set
+            // BIM element: emit the standard `bsi::ifc::class` instance attribute
+            // so viewers can identify the element type, plus the v5a typed schema
+            // component for richer data and the property set.
+            attributes["bsi::ifc::class"] = {
+                code: ifcDef.classCode,
+                uri: `${IFC_CLASS_URI_BASE}${ifcDef.classCode}`,
+            };
             attributes[ifcDef.schemaKey] = ifcDef.typeData;
             if (ifcDef.psetKey && ifcDef.psetData) {
                 attributes[ifcDef.psetKey] = { ...ifcDef.psetData };
