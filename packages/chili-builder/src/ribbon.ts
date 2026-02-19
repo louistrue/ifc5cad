@@ -65,6 +65,15 @@ export const DefaultRibbon: RibbonTab[] = [
         ],
     },
     {
+        tabName: "ribbon.tab.bim",
+        groups: [
+            {
+                groupName: "ribbon.group.bimElements",
+                items: ["bim.wall", "bim.slab", "bim.column", "bim.beam"],
+            },
+        ],
+    },
+    {
         tabName: "ribbon.tab.draw",
         groups: [
             {

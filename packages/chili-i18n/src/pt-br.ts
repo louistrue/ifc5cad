@@ -64,5 +64,6 @@ export default {
         "command.edit.undo": "Desfazer",
         "command.file.export": "Exportar",
         "command.file.import": "Importar",
+        "command.file.openIfcx": "Abrir IFCX",
     },
 } satisfies Locale;

@@ -41,6 +41,47 @@ const IFC_ELEMENT_PROXY = {
 };
 
 /**
+ * Maps the ifcType marker (set by BIM-tool nodes) to IFCX schema key + default data.
+ *
+ * Duck-typed against the `ifcType` property on geometry nodes to avoid circular
+ * imports between ifcx-core and ifcx-bim-tools.
+ */
+const IFC_TYPE_DEFAULTS: Record<
+    string,
+    {
+        schemaKey: string;
+        typeData: Record<string, unknown>;
+        psetKey?: string;
+        psetData?: Record<string, unknown>;
+    }
+> = {
+    IfcWall: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcWallType",
+        typeData: { predefinedType: "STANDARD" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_WallCommon",
+        psetData: { IsExternal: false, LoadBearing: false, FireRating: "", ThermalTransmittance: null },
+    },
+    IfcSlab: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcSlabType",
+        typeData: { predefinedType: "FLOOR" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_SlabCommon",
+        psetData: { IsExternal: false, LoadBearing: false, FireRating: "" },
+    },
+    IfcColumn: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcColumnType",
+        typeData: { predefinedType: "COLUMN" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_ColumnCommon",
+        psetData: { IsExternal: false, LoadBearing: true },
+    },
+    IfcBeam: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcBeamType",
+        typeData: { predefinedType: "BEAM" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_BeamCommon",
+        psetData: { IsExternal: false, LoadBearing: true },
+    },
+};
+
+/**
  * Converts a Chili3D FaceMeshData to a usd::usdgeom::mesh attribute object.
  * points: array of [x, y, z] triples.
  * faceVertexIndices: flat triangle index list.
@@ -105,11 +146,24 @@ function walkNode(node: INode, output: IFCXNode[]): string {
         "usd::Xform": IDENTITY_XFORM,
     };
 
-    // Geometry nodes get a default IFC class so IFCX viewers can classify them.
-    // If mesh tessellation is already available (WASM kernel initialised),
-    // export it as usd::usdgeom::mesh; otherwise the class alone acts as fallback.
+    // Geometry nodes get IFC classification and optional mesh geometry.
+    // BIM-tool nodes declare their ifcType (e.g. "IfcWall") via a property;
+    // all other geometry nodes fall back to IfcBuildingElementProxy.
     if (node instanceof GeometryNode) {
-        attributes["bsi::ifc::class"] = IFC_ELEMENT_PROXY;
+        const ifcType = (node as unknown as { ifcType?: string }).ifcType;
+        const ifcDef = ifcType ? IFC_TYPE_DEFAULTS[ifcType] : undefined;
+
+        if (ifcDef) {
+            // BIM element: use typed IFC attributes + property set
+            attributes[ifcDef.schemaKey] = ifcDef.typeData;
+            if (ifcDef.psetKey && ifcDef.psetData) {
+                attributes[ifcDef.psetKey] = { ...ifcDef.psetData };
+            }
+        } else {
+            // Generic geometry: fallback IFC class
+            attributes["bsi::ifc::class"] = IFC_ELEMENT_PROXY;
+        }
+
         const faces = node.mesh.faces;
         if (faces && faces.index.length > 0) {
             attributes["usd::usdgeom::mesh"] = faceMeshToUsdGeomMesh(faces);

@@ -144,24 +144,12 @@ export class Home extends HTMLElement {
             a(
                 {
                     className: style.socialItem,
-                    href: "https://github.com/xiangechen/chili3d",
+                    href: "https://github.com/louistrue/ifc5cad",
                     target: "_blank",
                     rel: "noopener noreferrer",
                 },
                 svg({ icon: "icon-github" }),
                 label({ textContent: "GitHub" }),
-            ),
-            button(
-                {
-                    className: style.socialItem,
-                    onclick: () => {
-                        PubSub.default.pub("executeCommand", "wechat.group");
-                    },
-                },
-                svg({
-                    icon: "icon-wechatGroup",
-                }),
-                label({ textContent: new Localize("command.wechat.group") }),
             ),
         );
     }

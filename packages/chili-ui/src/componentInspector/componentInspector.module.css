@@ -1,0 +1,77 @@
+.root {
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    margin: 2px 18px;
+    font-size: 1.15rem;
+    font-weight: bold;
+    flex: 0;
+}
+
+.panel {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    border-top: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+    background-color: var(--panel-background-color);
+}
+
+.empty {
+    color: var(--muted-text-color, #888);
+    font-size: 0.9rem;
+    padding: 4px 0;
+}
+
+.badge {
+    display: inline-block;
+    background-color: var(--accent-color, #3b82f6);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    align-items: center;
+    font-size: 0.9rem;
+    padding: 2px 0;
+}
+
+.propName {
+    color: var(--secondary-text-color, #666);
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.propValue {
+    font-family: monospace;
+    font-size: 0.85rem;
+    word-break: break-word;
+}
+
+.propValueTrue {
+    color: var(--success-color, #16a34a);
+}
+
+.propValueFalse {
+    color: var(--muted-text-color, #888);
+}
+
+.propValueNull {
+    color: var(--muted-text-color, #aaa);
+    font-style: italic;
+}

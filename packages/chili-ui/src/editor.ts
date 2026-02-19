@@ -14,6 +14,7 @@ import {
     type RibbonTab,
 } from "chili-core";
 import style from "./editor.module.css";
+import { ComponentInspector } from "./componentInspector/componentInspector";
 import { OKCancel } from "./okCancel";
 import { ProjectView } from "./project";
 import { PropertyView } from "./property";
@@ -23,7 +24,13 @@ import { RibbonTabData } from "./ribbon/ribbonData";
 import { Statusbar } from "./statusbar";
 import { LayoutViewport } from "./viewport";
 
-const quickCommands: CommandKeys[] = ["doc.save", "file.exportIfcx", "edit.undo", "edit.redo"];
+const quickCommands: CommandKeys[] = [
+    "doc.save",
+    "file.openIfcx",
+    "file.exportIfcx",
+    "edit.undo",
+    "edit.redo",
+];
 
 export class Editor extends HTMLElement {
     readonly ribbonContent: RibbonDataContent;
@@ -59,6 +66,7 @@ export class Editor extends HTMLElement {
             },
             new ProjectView({ className: style.sidebarItem }),
             new PropertyView({ className: style.sidebarItem }),
+            new ComponentInspector({ className: style.sidebarItem }),
             div({
                 className: style.sidebarResizer,
                 onmousedown: (e: MouseEvent) => this._startSidebarResize(e),

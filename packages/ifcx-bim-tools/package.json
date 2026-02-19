@@ -1,0 +1,10 @@
+{
+    "name": "ifcx-bim-tools",
+    "version": "0.1.0",
+    "description": "BIM-specific creation tools (Wall, Slab, Column, …) for IFCstudio",
+    "main": "src/index.ts",
+    "devDependencies": {
+        "chili": "*",
+        "chili-core": "*"
+    }
+}
