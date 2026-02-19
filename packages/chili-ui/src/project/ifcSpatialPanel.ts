@@ -161,7 +161,7 @@ export class IfcSpatialPanel extends HTMLElement {
         _document.onPropertyChanged(this._onDocPropertyChanged as any);
     }
 
-    override disconnectedCallback() {
+    disconnectedCallback() {
         this._document.removePropertyChanged(this._onDocPropertyChanged as any);
     }
 }
