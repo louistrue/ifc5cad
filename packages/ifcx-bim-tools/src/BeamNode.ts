@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import {
@@ -110,9 +110,6 @@ export class BeamNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("depth", v);
     }
 
-    /** IFC entity type marker — read by IFCXSerializer on export. */
-    readonly ifcType = "IfcBeam";
-
     // ── Constructor ───────────────────────────────────────────────────────────
 
     constructor(
@@ -123,6 +120,7 @@ export class BeamNode extends ParameterShapeNode {
         depth = 0.3,
     ) {
         super(document);
+        this.setPrivateValue("ifcType", "IfcBeam");
         this.setPrivateValue("startX", start.x);
         this.setPrivateValue("startY", start.y);
         this.setPrivateValue("startZ", start.z);

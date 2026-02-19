@@ -87,6 +87,38 @@ export class Config extends Observable {
     }
 
     @serialze()
+    get gridVisible() {
+        return this.getPrivateValue("gridVisible", true);
+    }
+    set gridVisible(value: boolean) {
+        this.setProperty("gridVisible", value);
+    }
+
+    @serialze()
+    get gridSnap() {
+        return this.getPrivateValue("gridSnap", true);
+    }
+    set gridSnap(value: boolean) {
+        this.setProperty("gridSnap", value);
+    }
+
+    @serialze()
+    get gridSize() {
+        return this.getPrivateValue("gridSize", 1);
+    }
+    set gridSize(value: number) {
+        if (value > 0) this.setProperty("gridSize", value);
+    }
+
+    @serialze()
+    get orthoMode() {
+        return this.getPrivateValue("orthoMode", false);
+    }
+    set orthoMode(value: boolean) {
+        this.setProperty("orthoMode", value);
+    }
+
+    @serialze()
     get language() {
         return this.getPrivateValue("language", I18n.defaultLanguage());
     }

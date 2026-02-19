@@ -273,6 +273,13 @@ export abstract class SnapEventHandler<D extends SnapData = SnapData> implements
     private handleNumericInput(view: IView, event: KeyboardEvent) {
         if (!["#", "-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"].includes(event.key)) return;
 
+        // Stop the browser's default "insert character" action.  Without this,
+        // the key event fires BEFORE the input element is focused, but the
+        // browser still executes the default insertion *after* our handler
+        // focuses the newly-created Input, resulting in the trigger key being
+        // appended to the initial value (e.g. pressing "3" produces "33").
+        event.preventDefault();
+
         this._state = SnapState.Inputing;
         PubSub.default.pub("showInput", event.key, (text: string) => {
             const error = this.inputError(text);

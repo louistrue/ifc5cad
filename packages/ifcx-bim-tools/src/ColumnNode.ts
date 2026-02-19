@@ -1,4 +1,4 @@
-// Part of the IFCstudio Project, under the AGPL-3.0 License.
+// Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
 import {
@@ -80,9 +80,6 @@ export class ColumnNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("height", v);
     }
 
-    /** IFC entity type marker — read by IFCXSerializer on export. */
-    readonly ifcType = "IfcColumn";
-
     constructor(
         document: IDocument,
         baseX: number,
@@ -93,6 +90,7 @@ export class ColumnNode extends ParameterShapeNode {
         height = 3.0,
     ) {
         super(document);
+        this.setPrivateValue("ifcType", "IfcColumn");
         this.setPrivateValue("baseX", baseX);
         this.setPrivateValue("baseY", baseY);
         this.setPrivateValue("baseZ", baseZ);

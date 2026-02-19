@@ -75,3 +75,27 @@
     color: var(--muted-text-color, #aaa);
     font-style: italic;
 }
+
+.assignRow {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.select {
+    width: 100%;
+    padding: 3px 4px;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 4px;
+    background-color: var(--input-background-color, #fff);
+    color: var(--text-color, #333);
+}
+
+.detail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}

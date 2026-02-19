@@ -13,7 +13,7 @@ import {
     type ShapeType,
     XYZ,
 } from "chili-core";
-import { type Dimension, DimensionUtils } from "../dimension";
+import { Dimension, DimensionUtils } from "../dimension";
 import type { ISnap, SnapData, SnapResult } from "../snap";
 import { AxisSnap, ObjectSnap, PlaneSnap, PointOnCurveSnap, WorkplaneSnap } from "../snaps";
 import { TrackingSnap } from "../tracking";
@@ -37,6 +37,32 @@ export class PointSnapEventHandler extends SnapEventHandler<PointSnapData> {
     constructor(document: IDocument, controller: AsyncController, pointData: PointSnapData) {
         super(document, controller, [], pointData);
         this.snaps.push(...this.getInitSnaps(pointData));
+    }
+
+    protected override setSnaped(view: IView, event: PointerEvent) {
+        super.setSnaped(view, event);
+        if (Config.instance.orthoMode && this._snaped?.point && this.data.refPoint) {
+            this._snaped.point = PointSnapEventHandler.applyOrtho(
+                this.data.refPoint(),
+                this._snaped.point,
+            );
+        }
+    }
+
+    static applyOrtho(ref: XYZ, point: XYZ): XYZ {
+        const dx = point.x - ref.x;
+        const dy = point.y - ref.y;
+        const dz = point.z - ref.z;
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        const az = Math.abs(dz);
+        if (ax >= ay && ax >= az) {
+            return new XYZ(point.x, ref.y, ref.z);
+        }
+        if (ay >= ax && ay >= az) {
+            return new XYZ(ref.x, point.y, ref.z);
+        }
+        return new XYZ(ref.x, ref.y, point.z);
     }
 
     protected getInitSnaps(pointData: PointSnapData): ISnap[] {
@@ -100,7 +126,8 @@ export class PointSnapEventHandler extends SnapEventHandler<PointSnapData> {
     }
 
     private isValidDimension(dimension: Dimension): boolean {
-        return DimensionUtils.contains(this.data.dimension!, dimension);
+        // If no dimension constraint is specified, all dimensions are valid.
+        return DimensionUtils.contains(this.data.dimension ?? Dimension.D1D2D3, dimension);
     }
 
     private hasInvalidNumbers(dims: number[]): boolean {
