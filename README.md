@@ -1,184 +1,157 @@
-# Chili3D
+# IFChili
 
-A browser-based 3D CAD application for online model design and editing.
+A browser-based 3D CAD application for authoring IFC5 (IFCX) building models.
 
 ![Screenshot](./screenshots/screenshot.png)
 
 ## Overview
 
-[Chili3D](https://chili3d.com) is an [open-source](https://github.com/xiangechen/chili3d), browser-based 3D CAD (Computer-Aided Design) application built with TypeScript. It achieves near-native performance by compiling OpenCascade (OCCT) to WebAssembly and integrating with Three.js, enabling powerful online modeling, editing, and rendering—all without the need for local installation.
-
-You can access Chili3D online at:
-
-- Official website: [chili3d.com](https://chili3d.com)
-- Cloudflare deployment: [chili3d.pages.dev](https://chili3d.pages.dev)
+IFChili is an open-source, browser-based CAD application for creating and editing building information models following the [buildingSMART IFC5 standard](https://github.com/buildingSMART/IFC5-development). Built on [Chili3D](https://github.com/xiangechen/chili3d), it compiles OpenCascade (OCCT) to WebAssembly and integrates with Three.js for near-native 3D modeling performance — all in the browser, with no local installation required.
 
 ## Features
 
-### Modeling Tools
+### IFC5 Authoring
 
-- **Basic Shapes**: Create boxes, cylinders, cones, spheres, pyramids, and more
-- **2D Sketching**: Draw lines, arcs, circles, ellipses, rectangles, polygons, and Bezier curves
-- **Advanced Operations**:
-    - Boolean operations (union, difference, intersection)
-    - Extrusion and revolution
-    - Sweeping and lofting
-    - Offset surfaces
-    - Section creation
+- **IFCX Document Model**: Entity-Component system aligned with the buildingSMART IFC5 TypeSpec standard
+- **Spatial Hierarchy**: Automatic wrapping of geometry in standard IFC structure (Project / Site / Building / Storey)
+- **IFC Spatial Panel**: Visual hierarchy display with inline editing of level names
+- **Schema Registry**: Bundled schemas including Swiss BIM standards (SIA 416, eBKP-H, KBOB LCA, Building Permit)
+- **IFCX Export**: Serialize documents to the IFCX format with default IFC class assignment and USD mesh tessellation
+
+### 3D Modeling Tools
+
+- **Basic Shapes**: Boxes, cylinders, cones, spheres, pyramids
+- **2D Sketching**: Lines, arcs, circles, ellipses, rectangles, polygons, Bezier curves
+- **Boolean Operations**: Union, difference, intersection
+- **Advanced Operations**: Extrusion, revolution, sweep, loft, offset surfaces, sections
+- **Editing**: Chamfer, fillet, trim, break, split, move, rotate, mirror
 
 ### Snapping and Tracking
 
-- **Object Snapping**: Precisely snap to geometric features (points, edges, faces)
-- **Workplane Snapping**: Snap to the current workplane for accurate planar operations
-- **Axis Tracking**: Create objects along tracked axes for precise alignment
-- **Feature Point Detection**: Automatically detect and snap to key geometric features
-- **Tracking Visualization**: Visual guides showing tracking lines and reference points
+- Object snapping to geometric features (points, edges, faces)
+- Workplane snapping for accurate planar operations
+- Axis tracking for precise alignment
+- Automatic feature point detection with visual tracking guides
 
-### Editing Tools
+### Measurement
 
-- **Modification**: Chamfer, fillet, trim, break, split
-- **Transformation**: Move, rotate, mirror
-- **Advanced Editing**:
-    - Feature removal
-    - Sub-shape manipulation
-    - Explode compound objects
-
-### Measurement Tools
-
-- Measure angles and lengths
-- Calculate the sum of length, area, and volume
+- Angle and length measurement
+- Sum of length, area, and volume calculations
 
 ### Document Management
 
 - Create, open, and save documents
 - Full undo/redo stack with transaction history
-- Import/export of industry-standard formats (STEP, IGES, BREP)
+- Import/export of STEP, IGES, and BREP formats
 
 ### User Interface
 
-- Office-style interface with contextual command organization
-- Hierarchical assembly management with flexible grouping capabilities
+- Office-style ribbon interface with contextual command organization
+- Hierarchical assembly management
 - Dynamic workplane support
-- 3D viewport with camera controls
-- Camera position recall
-
-### Localization
-
-- **Multi-Language Interface**: Built-in internationalization (i18n) supporting seamless adaptation to global user bases
-- **Current Languages**: Chinese & English; contributions for additional languages are welcome
+- 3D viewport with camera controls and position recall
+- Multi-language support (English and Chinese)
 
 ## Technology Stack
 
-- **Frontend**: TypeScript, Three.js
-- **3D Engine**: OpenCascade (via WebAssembly)
-- **Build Tools**: Rspack
-- **Testing**: Jest
+| Layer | Technology |
+|-------|-----------|
+| Language | TypeScript |
+| 3D Rendering | Three.js |
+| Geometry Kernel | OpenCascade (WebAssembly) |
+| Bundler | Rspack |
+| Testing | Rstest + Happy-DOM |
+| Linting/Formatting | Biome |
+| Deployment | Vercel / Docker + Nginx |
 
-## Change Log
+## Project Structure
 
-You can view the full change log [here](https://github.com/xiangechen/chili3d/releases).
-
-For Chinese users, you can also browse the [media](https://space.bilibili.com/539380032/lists/3108412?type=season).
+```
+packages/
+  chili-core/       Core interfaces, document model, shapes, materials
+  chili/            CAD commands and operations (66+ commands)
+  chili-three/      Three.js rendering integration
+  chili-wasm/       OpenCascade WebAssembly bindings
+  chili-ui/         UI components (panels, ribbon, dialogs)
+  chili-builder/    Application builder and dependency injection
+  chili-controls/   User input and interaction
+  chili-geo/        Geometry utilities
+  chili-vis/        Visualization layer
+  chili-i18n/       Internationalization
+  chili-storage/    Document persistence
+  chili-web/        Web application entry point
+  ifcx-core/        IFCX document model, serializer, and bridge
+  ifcx-schemas/     Schema registry with bundled BIM standards
+cpp/                OpenCascade WebAssembly module (C++/CMake)
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js
+- Node.js >= 22
 - npm
 
 ### Installation
 
-1. Clone the repository
-
-    ```bash
-    git clone https://github.com/xiangechen/chili3d.git
-    cd chili3d
-    ```
-
-2. Install dependencies
-
-    ```bash
-    npm install
-    ```
+```bash
+git clone https://github.com/louistrue/ifc5cad.git
+cd ifc5cad
+npm install
+```
 
 ### Development
 
-Start the development server:
-
 ```bash
-npm run dev # Launches at http://localhost:8080
+npm run dev       # Start dev server at http://localhost:8080
 ```
 
 ### Building
 
-Build the application:
-
 ```bash
-npm run build
+npm run build     # Production build
 ```
 
-### Building wasm
+### Building WebAssembly
 
-if you want to build wasm by yourself, you can use the following commands:
+To rebuild the OpenCascade WebAssembly module from source:
 
-1. Set up WebAssembly dependencies(if you have not installed them yet)
+```bash
+npm run setup:wasm   # Install WASM build dependencies (first time only)
+npm run build:wasm   # Build the WebAssembly module
+```
 
-    ```bash
-    npm run setup:wasm
-    ```
+### Testing
 
-2. Build the WebAssembly module:
+```bash
+npm run test      # Run all tests
+npm run testc     # Run tests with coverage
+```
 
-    ```bash
-    npm run build:wasm
-    ```
+### Code Quality
+
+```bash
+npm run check     # Biome linting and auto-fix
+npm run format    # Format all code (Biome + clang-format)
+```
 
 ## Development Status
 
-⚠️ **Early Development Notice**
+**Early Development** — IFChili is in active alpha development.
 
-Chili3D is currently in active alpha development. Key considerations:
-
-- Core APIs may undergo breaking changes
-- Essential features are under implementation
+- Core CAD modeling features are functional (inherited from Chili3D)
+- IFC5 authoring support is at Phase 0: spatial hierarchy, document model, and basic IFCX serialization
+- APIs may undergo breaking changes
 - Documentation is being progressively developed
+
+## Acknowledgments
+
+IFChili is built on [Chili3D](https://github.com/xiangechen/chili3d) by [xiangechen](https://github.com/xiangechen). The 3D CAD engine, modeling tools, and application framework are from the upstream Chili3D project.
 
 ## Contributing
 
-We welcome contributions in the form of code, bug reports, or feedback. Please feel free to submit pull requests or open issues.
-
-## Contact
-
-- **Discussions**: Join our [GitHub discussions](https://github.com/xiangechen/chili3d/discussions) for general chat or questions
-- **Issues**: Use [GitHub issues](https://github.com/xiangechen/chili3d/issues) to report public suggestions or bugs
-- **Email**: Contact us privately at xiangetg@msn.cn
+Contributions are welcome — code, bug reports, or feedback. Please submit pull requests or open issues.
 
 ## License
 
-Distributed under the GNU Affero General Public License v3.0 (AGPL-3.0). For commercial licensing options, contact xiangetg@msn.cn
-
-Full license details: [LICENSE](LICENSE)
-
-## Warning
-
-Chili3d uses [Microsoft Clarity](https://clarity.microsoft.com) for growth analytics. To disable data collection:
-
-1. Open public/index.html
-2. Delete lines containing this code:
-
-```
-<script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "***");
-</script>
-```
-
-This software is provided "AS IS," and the authors and contributors hereby disclaim all express and implied warranties. The user shall bear full responsibility for any and all risks and potential consequences arising from the use of this software. Such risks and consequences include, but are not limited to:
-
-1. Data loss, system failures, or any direct or indirect damages;
-2. Conduct violating applicable laws or regulations resulting from software usage and its consequences;
-3. All liabilities arising from the software’s use for illegal purposes or activities.
+Distributed under the GNU Affero General Public License v3.0 (AGPL-3.0). The C++ WebAssembly code is licensed under LGPL-3.0. See [LICENSE](LICENSE) for details.
