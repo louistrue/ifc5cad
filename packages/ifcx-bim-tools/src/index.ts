@@ -3,3 +3,7 @@
 
 export * from "./WallNode";
 export * from "./WallCommand";
+export * from "./SlabNode";
+export * from "./SlabCommand";
+export * from "./ColumnNode";
+export * from "./ColumnCommand";
