@@ -3,7 +3,6 @@
     "outputDirectory": "dist",
     "installCommand": "npm install",
     "framework": null,
-    "nodeVersion": "22.x",
     "headers": [
         {
             "source": "/(.*)",

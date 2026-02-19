@@ -4,6 +4,9 @@
     "description": "",
     "documentVersion": "0.7",
     "author": "仙阁",
+    "engines": {
+        "node": ">=22"
+    },
     "scripts": {
         "build": "rspack build",
         "build:wasm": "cd cpp && cmake --preset release && cmake --build --preset release",
