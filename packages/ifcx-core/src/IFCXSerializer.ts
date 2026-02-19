@@ -79,7 +79,7 @@ function walkNode(node: INode, output: IFCXNode[]): string {
     const ifcxNode: IFCXNode = {
         path: id,
         ...(Object.keys(children).length > 0 ? { children } : {}),
-        components: {
+        attributes: {
             "usd::Xform": IDENTITY_XFORM,
         },
     };
@@ -133,7 +133,7 @@ export class IFCXSerializer {
         nodes.push({
             path: storeyId,
             ...(Object.keys(storeyChildren).length > 0 ? { children: storeyChildren } : {}),
-            components: {
+            attributes: {
                 "bsi::ifc::v5a::schema::IfcBuildingStoreyType": {
                     Name: document.name,
                     Elevation: 0.0,
@@ -146,7 +146,7 @@ export class IFCXSerializer {
         nodes.push({
             path: buildingId,
             children: { [document.name]: storeyId },
-            components: {
+            attributes: {
                 "bsi::ifc::v5a::schema::IfcBuildingType": {
                     Name: document.name,
                 },
@@ -158,7 +158,7 @@ export class IFCXSerializer {
         nodes.push({
             path: siteId,
             children: { Building: buildingId },
-            components: {
+            attributes: {
                 "bsi::ifc::v5a::schema::IfcSiteType": {
                     Name: "Site",
                 },
@@ -170,7 +170,7 @@ export class IFCXSerializer {
         nodes.push({
             path: projectId,
             children: { Site: siteId },
-            components: {
+            attributes: {
                 "bsi::ifc::v5a::schema::IfcProjectType": {
                     Name: document.name,
                     Description: `Exported from IFCstudio on ${timestamp}`,
@@ -181,10 +181,13 @@ export class IFCXSerializer {
 
         return {
             header: {
+                id: document.name,
                 ifcxVersion: "ifcx_alpha",
+                dataVersion: "1.0.0",
                 author,
                 timestamp,
             },
+            imports: [],
             schemas: STANDARD_SCHEMAS,
             data: nodes,
         };
@@ -206,12 +209,20 @@ export class IFCXSerializer {
         const obj: Record<string, unknown> = typeof json === "string" ? JSON.parse(json) : json;
 
         if (!obj["header"] || !obj["schemas"] || !Array.isArray(obj["data"])) {
-            throw new Error("Invalid IFCX document: missing required fields (header, schemas, data)");
+            throw new Error("Invalid IFCX file: missing required fields (header, schemas, data)");
         }
 
         const header = obj["header"] as Record<string, unknown>;
+        if (!header["ifcxVersion"]) {
+            throw new Error("Invalid IFCX file: missing or invalid header.ifcxVersion");
+        }
         if (header["ifcxVersion"] !== "ifcx_alpha") {
             throw new Error(`Unsupported IFCX version: ${header["ifcxVersion"]}`);
+        }
+
+        // Normalise: imports is optional in older files
+        if (!Array.isArray(obj["imports"])) {
+            obj["imports"] = [];
         }
 
         return obj as unknown as IFCXDocument;
