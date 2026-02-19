@@ -69,7 +69,7 @@ export const DefaultRibbon: RibbonTab[] = [
         groups: [
             {
                 groupName: "ribbon.group.bimElements",
-                items: ["bim.wall", "bim.slab", "bim.column"],
+                items: ["bim.wall", "bim.slab", "bim.column", "bim.beam"],
             },
         ],
     },

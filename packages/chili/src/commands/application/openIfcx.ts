@@ -14,7 +14,7 @@ import { IFCX_FILE_EXTENSION, IFCXImporter, IFCXSerializer } from "ifcx-core";
 
 @command({
     key: "file.openIfcx",
-    icon: "icon-open",
+    icon: "icon-folder-open",
     isApplicationCommand: true,
 })
 export class OpenIfcx implements ICommand {

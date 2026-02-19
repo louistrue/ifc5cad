@@ -7,3 +7,5 @@ export * from "./SlabNode";
 export * from "./SlabCommand";
 export * from "./ColumnNode";
 export * from "./ColumnCommand";
+export * from "./BeamNode";
+export * from "./BeamCommand";
