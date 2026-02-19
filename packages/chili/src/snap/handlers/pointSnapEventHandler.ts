@@ -39,6 +39,32 @@ export class PointSnapEventHandler extends SnapEventHandler<PointSnapData> {
         this.snaps.push(...this.getInitSnaps(pointData));
     }
 
+    protected override setSnaped(view: IView, event: PointerEvent) {
+        super.setSnaped(view, event);
+        if (Config.instance.orthoMode && this._snaped?.point && this.data.refPoint) {
+            this._snaped.point = PointSnapEventHandler.applyOrtho(
+                this.data.refPoint(),
+                this._snaped.point,
+            );
+        }
+    }
+
+    static applyOrtho(ref: XYZ, point: XYZ): XYZ {
+        const dx = point.x - ref.x;
+        const dy = point.y - ref.y;
+        const dz = point.z - ref.z;
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        const az = Math.abs(dz);
+        if (ax >= ay && ax >= az) {
+            return new XYZ(point.x, ref.y, ref.z);
+        }
+        if (ay >= ax && ay >= az) {
+            return new XYZ(ref.x, point.y, ref.z);
+        }
+        return new XYZ(ref.x, ref.y, point.z);
+    }
+
     protected getInitSnaps(pointData: PointSnapData): ISnap[] {
         const objectSnap = new ObjectSnap(Config.instance.snapType, pointData.refPoint);
         const workplaneSnap = pointData.plane

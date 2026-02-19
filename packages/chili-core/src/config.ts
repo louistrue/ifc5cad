@@ -86,6 +86,34 @@ export class Config extends Observable {
         this.setProperty("dynamicWorkplane", value);
     }
 
+    get gridVisible() {
+        return this.getPrivateValue("gridVisible", true);
+    }
+    set gridVisible(value: boolean) {
+        this.setProperty("gridVisible", value);
+    }
+
+    get gridSnap() {
+        return this.getPrivateValue("gridSnap", true);
+    }
+    set gridSnap(value: boolean) {
+        this.setProperty("gridSnap", value);
+    }
+
+    get gridSize() {
+        return this.getPrivateValue("gridSize", 1);
+    }
+    set gridSize(value: number) {
+        if (value > 0) this.setProperty("gridSize", value);
+    }
+
+    get orthoMode() {
+        return this.getPrivateValue("orthoMode", false);
+    }
+    set orthoMode(value: boolean) {
+        this.setProperty("orthoMode", value);
+    }
+
     @serialze()
     get language() {
         return this.getPrivateValue("language", I18n.defaultLanguage());

@@ -311,6 +311,9 @@ const I18N_KEYS = [
     "window.thickness",
     "window.width",
     "stair.width",
+    "statusBar.grid",
+    "statusBar.gridSnap",
+    "statusBar.ortho",
 ] as const;
 
 export type I18nKeys = (typeof I18N_KEYS)[number];

@@ -140,5 +140,8 @@ export default {
         "window.thickness": "Dicke",
         "window.width": "Breite",
         "stair.width": "Breite",
+        "statusBar.grid": "Raster",
+        "statusBar.gridSnap": "Rasterfang",
+        "statusBar.ortho": "Ortho",
     },
 } satisfies Locale;

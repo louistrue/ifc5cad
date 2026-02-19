@@ -41,7 +41,14 @@ export class SnapConfig extends HTMLElement {
     }
 
     private readonly snapTypeChanged = (property: keyof Config) => {
-        if (property === "snapType" || property === "enableSnap" || property === "enableSnapTracking") {
+        if (
+            property === "snapType" ||
+            property === "enableSnap" ||
+            property === "enableSnapTracking" ||
+            property === "gridVisible" ||
+            property === "gridSnap" ||
+            property === "orthoMode"
+        ) {
             this.innerHTML = "";
             this.render();
         }
@@ -83,6 +90,48 @@ export class SnapConfig extends HTMLElement {
                 label({
                     htmlFor: "snap-tracking",
                     textContent: new Localize("statusBar.tracking"),
+                }),
+            ),
+            div(
+                input({
+                    type: "checkbox",
+                    id: "snap-grid",
+                    checked: Config.instance.gridVisible,
+                    onclick: () => {
+                        Config.instance.gridVisible = !Config.instance.gridVisible;
+                    },
+                }),
+                label({
+                    htmlFor: "snap-grid",
+                    textContent: new Localize("statusBar.grid"),
+                }),
+            ),
+            div(
+                input({
+                    type: "checkbox",
+                    id: "snap-gridSnap",
+                    checked: Config.instance.gridSnap,
+                    onclick: () => {
+                        Config.instance.gridSnap = !Config.instance.gridSnap;
+                    },
+                }),
+                label({
+                    htmlFor: "snap-gridSnap",
+                    textContent: new Localize("statusBar.gridSnap"),
+                }),
+            ),
+            div(
+                input({
+                    type: "checkbox",
+                    id: "snap-ortho",
+                    checked: Config.instance.orthoMode,
+                    onclick: () => {
+                        Config.instance.orthoMode = !Config.instance.orthoMode;
+                    },
+                }),
+                label({
+                    htmlFor: "snap-ortho",
+                    textContent: new Localize("statusBar.ortho"),
                 }),
             ),
         );

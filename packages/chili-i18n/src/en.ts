@@ -316,5 +316,8 @@ export default {
         "window.thickness": "Thickness",
         "window.width": "Width",
         "stair.width": "Width",
+        "statusBar.grid": "Grid",
+        "statusBar.gridSnap": "Grid Snap",
+        "statusBar.ortho": "Ortho",
     },
 } satisfies Locale;

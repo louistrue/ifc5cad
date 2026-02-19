@@ -315,5 +315,8 @@ export default {
         "window.thickness": "厚度",
         "window.width": "宽度",
         "stair.width": "宽度",
+        "statusBar.grid": "栅格",
+        "statusBar.gridSnap": "栅格捕捉",
+        "statusBar.ortho": "正交",
     },
 } satisfies Locale;

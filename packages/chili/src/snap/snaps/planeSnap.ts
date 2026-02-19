@@ -1,7 +1,7 @@
 // Part of the Chili3d Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
-import type { Plane, XYZ } from "chili-core";
+import { Config, type Plane, XYZ } from "chili-core";
 import { ViewUtils } from "chili-vis";
 import type { ISnap, MouseAndDetected, SnapResult } from "../snap";
 
@@ -15,8 +15,12 @@ export abstract class PlaneSnapBase implements ISnap {
     protected snapAtPlane(plane: Plane, data: MouseAndDetected): SnapResult | undefined {
         plane = ViewUtils.ensurePlane(data.view, plane);
         const ray = data.view.rayAt(data.mx, data.my);
-        const point = plane.intersectRay(ray);
+        let point = plane.intersectRay(ray);
         if (!point) return undefined;
+
+        if (Config.instance.gridSnap) {
+            point = PlaneSnapBase.quantizeToGrid(point);
+        }
 
         const distance = this.refPoint ? this.refPoint().distanceTo(point) : undefined;
 
@@ -26,6 +30,15 @@ export abstract class PlaneSnapBase implements ISnap {
             distance,
             shapes: [],
         };
+    }
+
+    static quantizeToGrid(point: XYZ): XYZ {
+        const g = Config.instance.gridSize;
+        return new XYZ(
+            Math.round(point.x / g) * g,
+            Math.round(point.y / g) * g,
+            Math.round(point.z / g) * g,
+        );
     }
 }
 
