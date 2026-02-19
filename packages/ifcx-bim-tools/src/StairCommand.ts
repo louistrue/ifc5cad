@@ -1,19 +1,28 @@
 // Part of the IFCstudio Project, under the AGPL-3.0 License.
 // See LICENSE file in the project root for full license information.
 
-import { type GeometryNode, Plane, Precision, XYZ, command, property } from "chili-core";
+import {
+    type GeometryNode,
+    Precision,
+    type ShapeMeshData,
+    XYZ,
+    command,
+    property,
+} from "chili-core";
 import { CreateCommand, type IStep, PointStep } from "chili";
 import { StairNode } from "./StairNode";
 
 /**
- * Two-click stair creation tool.
+ * Two-click parametric stair creation tool with live stepped preview.
  *
- * Usage:
- *  1. Click the bottom-front point of the stair (foot of first riser).
- *  2. Click the top-landing point — the stair bounding box is created.
+ * Workflow:
+ *  1. Click the base point (foot of first riser).
+ *  2. Move cursor to set run direction + height — a real-time stepped profile
+ *     preview updates as you move. Click to confirm.
  *
- * Width is editable before clicking. After creation all properties are editable
- * on the StairNode in the Properties panel.
+ * Width, riser height, and structural thickness are editable in the property
+ * panel before the second click. After creation, all properties remain editable
+ * on the StairNode.
  *
  * IFC semantics: IfcStairType + Pset_StairCommon are emitted on IFCX export.
  */
@@ -23,6 +32,8 @@ import { StairNode } from "./StairNode";
 })
 export class StairCommand extends CreateCommand {
     private _width = 1.2;
+    private _riserHeight = 0.18;
+    private _thickness = 0.15;
 
     @property("stair.width")
     get width(): number {
@@ -30,6 +41,22 @@ export class StairCommand extends CreateCommand {
     }
     set width(v: number) {
         this.setProperty("width", v);
+    }
+
+    @property("stair.riserHeight")
+    get riserHeight(): number {
+        return this._riserHeight;
+    }
+    set riserHeight(v: number) {
+        if (v > 0) this.setProperty("riserHeight", v);
+    }
+
+    @property("stair.thickness")
+    get thickness(): number {
+        return this._thickness;
+    }
+    set thickness(v: number) {
+        if (v > 0) this.setProperty("thickness", v);
     }
 
     protected override getSteps(): IStep[] {
@@ -47,36 +74,55 @@ export class StairCommand extends CreateCommand {
         };
     };
 
-    private readonly previewStair = (top: XYZ | undefined) => {
+    private readonly previewStair = (top: XYZ | undefined): ShapeMeshData[] => {
         const base = this.stepDatas[0].point!;
-        if (top === undefined) return [this.meshPoint(base)];
+        if (!top) return [this.meshPoint(base)];
 
-        const runVec = top.sub(base);
-        const runLength = runVec.length();
-        if (runLength < Precision.Distance) return [this.meshPoint(base)];
+        const rise = top.z - base.z;
+        const runVec2D = new XYZ(top.x - base.x, top.y - base.y, 0);
+        const horizontalRun = runVec2D.length();
 
-        const rise = Math.abs(top.z - base.z);
-        if (rise < Precision.Distance) return [this.meshPoint(base), this.meshPoint(top)];
+        if (
+            Math.abs(rise) < Precision.Distance ||
+            horizontalRun < Precision.Distance
+        ) {
+            return [this.meshPoint(base), this.meshPoint(top)];
+        }
 
-        const xvec = runVec.normalize()!;
-        const xvecForPlane = Math.abs(xvec.z) > 1 - Precision.Distance ? XYZ.unitX : xvec;
-        const yvec = XYZ.unitZ.cross(xvecForPlane).normalize()!;
-        const origin = base.sub(yvec.multiply(this._width / 2));
-        const plane = new Plane(origin, XYZ.unitZ, xvecForPlane);
+        try {
+            const shape = StairNode.buildStairShape(
+                this.application.shapeFactory,
+                base,
+                top,
+                this._width,
+                this._riserHeight,
+                this._thickness,
+            );
 
-        const horizontalRun = Math.sqrt(runVec.x ** 2 + runVec.y ** 2);
-        const dx = horizontalRun < Precision.Distance ? runLength : horizontalRun;
+            if (!shape.isOk) {
+                return [this.meshPoint(base), this.meshPoint(top)];
+            }
 
-        return [
-            this.meshPoint(base),
-            this.meshPoint(top),
-            this.meshCreatedShape("box", plane, dx, this._width, rise),
-        ];
+            return [
+                this.meshPoint(base),
+                this.meshPoint(top),
+                this.meshShape(shape),
+            ];
+        } catch {
+            return [this.meshPoint(base), this.meshPoint(top)];
+        }
     };
 
     protected override geometryNode(): GeometryNode {
         const base = this.stepDatas[0].point!;
         const top = this.stepDatas[1].point!;
-        return new StairNode(this.document, base, top, this._width);
+        return new StairNode(
+            this.document,
+            base,
+            top,
+            this._width,
+            this._riserHeight,
+            this._thickness,
+        );
     }
 }

@@ -5,27 +5,29 @@ import {
     type I18nKeys,
     type IDocument,
     type IShape,
+    type IShapeFactory,
     ParameterShapeNode,
-    Plane,
     Precision,
     Result,
     XYZ,
+    type XYZLike,
     property,
     serializable,
     serialze,
 } from "chili-core";
 
 /**
- * A parametric stair node defined by a base point, top-landing point, and stair width.
+ * Parametric stair node with true stepped profile geometry.
  *
- * The geometry is a bounding-box solid spanning from the foot point to the top-landing
- * point. This correctly represents the overall stair volume for clash detection and
- * IFCX export while keeping shape generation simple and robust.
+ * The stair is defined by a base point (foot of first riser) and a top point
+ * (top-landing edge). The shape is built by:
+ *   1. Computing numSteps from the rise and target riserHeight.
+ *   2. Building a closed stepped profile (polygon) in the run-direction / Z plane.
+ *   3. Converting the wire to a face and extruding it by the stair width.
  *
- * Typical authoring workflow: place the stair bounding box, then add detailed
- * geometry via linked geometry or sub-element decomposition in a future phase.
+ * Properties are fully editable: changing any value regenerates the geometry.
  *
- * IFC classification: IfcStair / IfcStairType (emitted by IFCXSerializer on export).
+ * IFC classification: IfcStair / IfcStairType (emitted by IFCXSerializer).
  */
 @serializable([
     "document",
@@ -36,13 +38,15 @@ import {
     "topY",
     "topZ",
     "width",
+    "riserHeight",
+    "thickness",
 ])
 export class StairNode extends ParameterShapeNode {
     override display(): I18nKeys {
         return "body.stair";
     }
 
-    // ── Base (bottom-front) point ─────────────────────────────────────────────
+    // ── Base (foot of first riser) ─────────────────────────────────────────
 
     @serialze()
     @property("common.location")
@@ -69,7 +73,7 @@ export class StairNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("baseZ", v);
     }
 
-    // ── Top (upper-landing) point ─────────────────────────────────────────────
+    // ── Top (upper-landing edge) ───────────────────────────────────────────
 
     @serialze()
     get topX(): number {
@@ -95,7 +99,7 @@ export class StairNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("topZ", v);
     }
 
-    // ── Width ─────────────────────────────────────────────────────────────────
+    // ── Dimensions ─────────────────────────────────────────────────────────
 
     @serialze()
     @property("stair.width")
@@ -106,6 +110,24 @@ export class StairNode extends ParameterShapeNode {
         this.setPropertyEmitShapeChanged("width", v);
     }
 
+    @serialze()
+    @property("stair.riserHeight")
+    get riserHeight(): number {
+        return this.getPrivateValue("riserHeight");
+    }
+    set riserHeight(v: number) {
+        if (v > 0) this.setPropertyEmitShapeChanged("riserHeight", v);
+    }
+
+    @serialze()
+    @property("stair.thickness")
+    get thickness(): number {
+        return this.getPrivateValue("thickness");
+    }
+    set thickness(v: number) {
+        if (v > 0) this.setPropertyEmitShapeChanged("thickness", v);
+    }
+
     /** IFC entity type marker — read by IFCXSerializer on export. */
     readonly ifcType = "IfcStair";
 
@@ -114,6 +136,8 @@ export class StairNode extends ParameterShapeNode {
         base: XYZ,
         top: XYZ,
         width = 1.2,
+        riserHeight = 0.18,
+        thickness = 0.15,
     ) {
         super(document);
         this.setPrivateValue("baseX", base.x);
@@ -123,40 +147,130 @@ export class StairNode extends ParameterShapeNode {
         this.setPrivateValue("topY", top.y);
         this.setPrivateValue("topZ", top.z);
         this.setPrivateValue("width", width);
+        this.setPrivateValue("riserHeight", riserHeight);
+        this.setPrivateValue("thickness", thickness);
     }
 
     protected generateShape(): Result<IShape> {
         const base = new XYZ(this.baseX, this.baseY, this.baseZ);
         const top = new XYZ(this.topX, this.topY, this.topZ);
+        return StairNode.buildStairShape(
+            this.document.application.shapeFactory,
+            base,
+            top,
+            this.width,
+            this.riserHeight,
+            this.thickness,
+        );
+    }
 
-        const runVec = top.sub(base);
-        const runLength = runVec.length();
-
-        if (runLength < Precision.Distance) {
-            return Result.err("Stair base and top points are too close");
-        }
-
+    /**
+     * Build stepped stair solid from base/top points.
+     * Shared between StairNode (geometry) and StairCommand (preview).
+     */
+    static buildStairShape(
+        factory: IShapeFactory,
+        base: XYZ,
+        top: XYZ,
+        width: number,
+        targetRiserHeight: number,
+        thickness: number,
+    ): Result<IShape> {
         const rise = top.z - base.z;
         if (Math.abs(rise) < Precision.Distance) {
-            return Result.err("Stair base and top points must have different elevations");
+            return Result.err("Stair must have a height difference");
         }
 
-        // Build the bounding box along the stair run direction.
-        const xvec = runVec.normalize()!;
-        const xvecForPlane = Math.abs(xvec.z) > 1 - Precision.Distance ? XYZ.unitX : xvec;
-        const yvec = XYZ.unitZ.cross(xvecForPlane).normalize()!;
+        const runVec2D = new XYZ(top.x - base.x, top.y - base.y, 0);
+        const horizontalRun = runVec2D.length();
+        if (horizontalRun < Precision.Distance) {
+            return Result.err("Stair must have horizontal distance");
+        }
 
-        // Origin at base, centered on stair width.
-        const origin = base.sub(yvec.multiply(this.width / 2));
-        const plane = new Plane(origin, XYZ.unitZ, xvecForPlane);
+        const numSteps = Math.max(1, Math.round(Math.abs(rise) / targetRiserHeight));
+        const actualRiser = Math.abs(rise) / numSteps;
+        const actualTread = horizontalRun / numSteps;
 
-        // dx = horizontal run length, dy = width, dz = rise
-        const horizontalRun = Math.sqrt(runVec.x ** 2 + runVec.y ** 2);
-        return this.document.application.shapeFactory.box(
-            plane,
-            horizontalRun < Precision.Distance ? runLength : horizontalRun,
-            this.width,
-            Math.abs(rise),
+        // Run direction (horizontal, normalised)
+        const runDir = runVec2D.normalize()!;
+        // Width direction (perpendicular to run, horizontal)
+        const widthDir = XYZ.unitZ.cross(runDir).normalize()!;
+
+        // Profile origin: offset by -width/2 in width direction
+        const profileOrigin = base.sub(widthDir.multiply(width / 2));
+
+        // Build stepped profile in the run-Z plane
+        const pts = StairNode.stairProfilePoints(
+            profileOrigin,
+            runDir,
+            numSteps,
+            actualTread,
+            actualRiser,
+            thickness,
         );
+
+        const wire = factory.polygon(pts);
+        if (!wire.isOk) return Result.err(`Stair profile failed: ${wire.error}`);
+
+        const face = wire.value.toFace();
+        if (!face.isOk) {
+            wire.value.dispose();
+            return Result.err(`Stair face failed: ${face.error}`);
+        }
+
+        const extrudeVec = widthDir.multiply(width);
+        const solid = factory.prism(face.value, extrudeVec);
+        face.value.dispose();
+        return solid;
+    }
+
+    /**
+     * Compute the closed stair profile polygon points.
+     *
+     * Side view (X = run direction, Z = up):
+     * ```
+     *         ┌──┐
+     *      ┌──┘  │
+     *   ┌──┘     │
+     *   │ thickness
+     *   └────────┘
+     * ```
+     */
+    static stairProfilePoints(
+        origin: XYZ,
+        runDir: XYZ,
+        numSteps: number,
+        tread: number,
+        riser: number,
+        thickness: number,
+    ): XYZLike[] {
+        const pts: XYZLike[] = [];
+
+        // Bottom-front (below base, structural slab underside)
+        pts.push(origin.add(XYZ.unitZ.multiply(-thickness)));
+        // Base point (foot of first riser)
+        pts.push(origin);
+
+        // Stepped profile: for each step, go up (riser) then forward (tread)
+        for (let i = 0; i < numSteps; i++) {
+            const topOfRiser = origin
+                .add(runDir.multiply(i * tread))
+                .add(XYZ.unitZ.multiply((i + 1) * riser));
+            pts.push(topOfRiser);
+
+            const endOfTread = origin
+                .add(runDir.multiply((i + 1) * tread))
+                .add(XYZ.unitZ.multiply((i + 1) * riser));
+            pts.push(endOfTread);
+        }
+
+        // Bottom-back (below top landing, structural slab underside)
+        pts.push(
+            origin
+                .add(runDir.multiply(numSteps * tread))
+                .add(XYZ.unitZ.multiply(-thickness)),
+        );
+
+        return pts;
     }
 }
