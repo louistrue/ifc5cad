@@ -13,7 +13,7 @@ import {
     type ShapeType,
     XYZ,
 } from "chili-core";
-import { type Dimension, DimensionUtils } from "../dimension";
+import { Dimension, DimensionUtils } from "../dimension";
 import type { ISnap, SnapData, SnapResult } from "../snap";
 import { AxisSnap, ObjectSnap, PlaneSnap, PointOnCurveSnap, WorkplaneSnap } from "../snaps";
 import { TrackingSnap } from "../tracking";
