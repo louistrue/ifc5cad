@@ -16,7 +16,7 @@ export type IFCXVersion = "ifcx_alpha";
  */
 export interface IFCXHeader {
     /** IFCX format version */
-    version: IFCXVersion;
+    ifcxVersion: IFCXVersion;
     /** Author or authoring application */
     author: string;
     /** ISO 8601 timestamp of creation/modification */

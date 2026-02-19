@@ -181,7 +181,7 @@ export class IFCXSerializer {
 
         return {
             header: {
-                version: "ifcx_alpha",
+                ifcxVersion: "ifcx_alpha",
                 author,
                 timestamp,
             },
@@ -210,8 +210,8 @@ export class IFCXSerializer {
         }
 
         const header = obj["header"] as Record<string, unknown>;
-        if (header["version"] !== "ifcx_alpha") {
-            throw new Error(`Unsupported IFCX version: ${header["version"]}`);
+        if (header["ifcxVersion"] !== "ifcx_alpha") {
+            throw new Error(`Unsupported IFCX version: ${header["ifcxVersion"]}`);
         }
 
         return obj as unknown as IFCXDocument;
