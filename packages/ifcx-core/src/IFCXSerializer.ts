@@ -79,6 +79,24 @@ const IFC_TYPE_DEFAULTS: Record<
         psetKey: "bsi::ifc::v5a::prop::Pset_BeamCommon",
         psetData: { IsExternal: false, LoadBearing: true },
     },
+    IfcDoor: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcDoorType",
+        typeData: { predefinedType: "DOOR" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_DoorCommon",
+        psetData: { IsExternal: false, HandicapAccessible: false, FireRating: "" },
+    },
+    IfcWindow: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcWindowType",
+        typeData: { predefinedType: "WINDOW" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_WindowCommon",
+        psetData: { IsExternal: false, FireRating: "", ThermalTransmittance: null },
+    },
+    IfcStair: {
+        schemaKey: "bsi::ifc::v5a::schema::IfcStairType",
+        typeData: { predefinedType: "STRAIGHT_RUN_STAIR" },
+        psetKey: "bsi::ifc::v5a::prop::Pset_StairCommon",
+        psetData: { RequiredHeadroom: null, HandicapAccessible: false, FireExit: false },
+    },
 };
 
 /**
