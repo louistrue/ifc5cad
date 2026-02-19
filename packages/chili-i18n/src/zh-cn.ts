@@ -116,7 +116,6 @@ export default {
         "command.modify.trim": "修剪",
         "command.special.last": "__上个命令__",
         "command.test.performance": "性能测试",
-        "command.wechat.group": "微信群",
         "command.workingPlane.alignToPlane": "对齐到平面",
         "command.workingPlane.fromSection": "从截面创建",
         "command.workingPlane.set": "设置工作平面",

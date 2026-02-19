@@ -208,7 +208,7 @@ export class Ribbon extends HTMLElement {
         return div(
             { className: style.right },
             a(
-                { href: "https://github.com/xiangechen/chili3d", target: "_blank" },
+                { href: "https://github.com/louistrue/ifc5cad", target: "_blank" },
                 svg({ title: "Github", className: style.icon, icon: "icon-github" }),
             ),
         );

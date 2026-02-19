@@ -112,7 +112,6 @@ const I18N_KEYS = [
     "command.modify.trim",
     "command.special.last",
     "command.test.performance",
-    "command.wechat.group",
     "command.workingPlane.alignToPlane",
     "command.workingPlane.fromSection",
     "command.workingPlane.set",
