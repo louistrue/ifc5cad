@@ -86,6 +86,7 @@ export default {
         "command.file.export": "导出",
         "command.file.exportIfcx": "保存为 IFCX",
         "command.file.import": "导入",
+        "command.file.openIfcx": "打开 IFCX",
         "command.measure.angle": "角度",
         "command.measure.length": "长度",
         "command.measure.select": "选择",

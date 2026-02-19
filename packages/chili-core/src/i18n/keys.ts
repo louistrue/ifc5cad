@@ -81,6 +81,7 @@ const I18N_KEYS = [
     "command.file.export",
     "command.file.exportIfcx",
     "command.file.import",
+    "command.file.openIfcx",
     "command.measure.angle",
     "command.measure.length",
     "command.measure.select",

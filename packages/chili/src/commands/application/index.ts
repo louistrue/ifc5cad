@@ -4,6 +4,7 @@
 export * from "./exportIfcx";
 export * from "./newDocument";
 export * from "./openDocument";
+export * from "./openIfcx";
 export * from "./performanceTest";
 export * from "./saveDocument";
 export * from "./toFile";

@@ -23,7 +23,13 @@ import { RibbonTabData } from "./ribbon/ribbonData";
 import { Statusbar } from "./statusbar";
 import { LayoutViewport } from "./viewport";
 
-const quickCommands: CommandKeys[] = ["doc.save", "file.exportIfcx", "edit.undo", "edit.redo"];
+const quickCommands: CommandKeys[] = [
+    "doc.save",
+    "file.openIfcx",
+    "file.exportIfcx",
+    "edit.undo",
+    "edit.redo",
+];
 
 export class Editor extends HTMLElement {
     readonly ribbonContent: RibbonDataContent;
