@@ -10,6 +10,7 @@ const I18N_KEYS = [
     "body.arc",
     "body.bolean",
     "body.box",
+    "body.wall",
     "body.circle",
     "body.cone",
     "body.cylinder",
@@ -38,6 +39,7 @@ const I18N_KEYS = [
     "circle.center",
     "circle.radius",
     "command.act.alignCamera",
+    "command.bim.wall",
     "command.boolean.common",
     "command.boolean.cut",
     "command.boolean.join",
@@ -227,6 +229,7 @@ const I18N_KEYS = [
     "ribbon.group.2d",
     "ribbon.group.3d",
     "ribbon.group.act",
+    "ribbon.group.bimElements",
     "ribbon.group.boolean",
     "ribbon.group.converter",
     "ribbon.group.draw",
@@ -238,6 +241,7 @@ const I18N_KEYS = [
     "ribbon.group.selection",
     "ribbon.group.tools",
     "ribbon.group.workingPlane",
+    "ribbon.tab.bim",
     "ribbon.tab.draw",
     "ribbon.tab.file",
     "ribbon.tab.startup",
@@ -275,6 +279,8 @@ const I18N_KEYS = [
     "viewport.mode.solid",
     "viewport.mode.wireframe",
     "viewport.mode.solidAndWireframe",
+    "wall.height",
+    "wall.thickness",
 ] as const;
 
 export type I18nKeys = (typeof I18N_KEYS)[number];

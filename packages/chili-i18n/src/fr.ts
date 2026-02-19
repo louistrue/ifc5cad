@@ -15,6 +15,7 @@ export default {
         "axis.y": "Axe Y",
         "axis.z": "Axe Z",
         "body.arc": "Arc",
+        "body.wall": "Mur",
         "body.box": "Boîte",
         "body.circle": "Cercle",
         "body.cylinder": "Cylindre",
@@ -104,5 +105,10 @@ export default {
         "snap.perpendicular": "Perpendiculaire",
         "toast.success": "Succès",
         "toast.fail": "Échec",
+        "command.bim.wall": "Mur",
+        "ribbon.group.bimElements": "Éléments",
+        "ribbon.tab.bim": "BIM",
+        "wall.height": "Hauteur",
+        "wall.thickness": "Épaisseur",
     },
 } satisfies Locale;

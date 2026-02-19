@@ -16,6 +16,7 @@ export default {
         "axis.z": "Z-Achse",
         "body.arc": "Bogen",
         "body.box": "Quader",
+        "body.wall": "Wand",
         "body.circle": "Kreis",
         "body.cylinder": "Zylinder",
         "body.ellipse": "Ellipse",
@@ -104,5 +105,10 @@ export default {
         "snap.perpendicular": "Senkrecht",
         "toast.success": "Erfolgreich",
         "toast.fail": "Fehlgeschlagen",
+        "command.bim.wall": "Wand",
+        "ribbon.group.bimElements": "Bauteile",
+        "ribbon.tab.bim": "BIM",
+        "wall.height": "Höhe",
+        "wall.thickness": "Dicke",
     },
 } satisfies Locale;

@@ -3,6 +3,8 @@
 
 import { AppBuilder } from "chili-builder";
 import { type IApplication, Logger } from "chili-core";
+// Side-effect import: registers BIM command decorators (@command) in the global registry
+import "ifcx-bim-tools";
 import { Loading } from "./loading";
 
 const loading = new Loading();
