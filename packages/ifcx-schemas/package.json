@@ -1,0 +1,7 @@
+{
+    "name": "ifcx-schemas",
+    "version": "0.1.0",
+    "description": "IFCX schema registry with bundled Swiss BIM standard schemas for IFCstudio",
+    "main": "src/index.ts",
+    "devDependencies": {}
+}

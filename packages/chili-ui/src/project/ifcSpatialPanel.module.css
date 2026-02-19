@@ -1,0 +1,87 @@
+.root {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* One collapsible level of the IFC hierarchy */
+.level {
+    display: flex;
+    flex-direction: column;
+}
+
+.levelHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 3px 4px;
+    border-radius: 2px;
+    cursor: default;
+    gap: 2px;
+}
+
+.levelHeader:hover {
+    background-color: var(--hover-background-color);
+}
+
+.expandIcon {
+    width: 12px;
+    height: 12px;
+    padding: 2px 4px;
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+/* IFC type badge */
+.ifcBadge {
+    font-size: 9px;
+    font-weight: 700;
+    color: #1565c0;
+    background: rgba(21, 101, 192, 0.10);
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.levelName {
+    font-size: 12px;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: none;
+    opacity: 0.85;
+    cursor: text;
+}
+
+/* Editable name input (shown on dblclick) */
+.levelNameInput {
+    flex: 1 1 auto;
+    font-size: 12px;
+    border: 1px solid #1565c0;
+    border-radius: 2px;
+    padding: 0 2px;
+    outline: none;
+    background: var(--input-background-color, #fff);
+    color: inherit;
+    min-width: 0;
+}
+
+/*
+ * Children of each level are indented via cascading padding-left.
+ * Four nested levelContent divs → 4 × 14 px = 56 px before the Tree.
+ */
+.levelContent {
+    display: flex;
+    flex-direction: column;
+    padding-left: 14px;
+    border-left: 1px solid rgba(21, 101, 192, 0.12);
+    margin-left: 9px;   /* aligns the border with the centre of the expand icon */
+}
+
+.collapsed {
+    display: none;
+}

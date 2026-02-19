@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "ch::sia416",
+    "title": "SIA 416 Area Classification",
+    "description": "Swiss SIA 416 standard for area definitions in buildings. Used for building permits, rent calculations, and energy reference area (EBF) determination.",
+    "type": "object",
+    "properties": {
+        "area_type": {
+            "type": "string",
+            "enum": ["GF", "NGF", "NNF", "VF", "FF", "KF", "AGF", "UGF"],
+            "description": "SIA 416 area type: GF=Geschossfläche, NGF=Nettogeschossfläche, NNF=Nettowohnfläche, VF=Verkehrsfläche, FF=Funktionsfläche, KF=Konstruktionsfläche, AGF=Anrechenbare Geschossfläche, UGF=Untergeschossfläche"
+        },
+        "area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Area in square metres"
+        },
+        "is_heated": {
+            "type": "boolean",
+            "description": "Whether this area is thermally conditioned (relevant for EBF/EWG calculations)"
+        },
+        "is_energy_reference_area": {
+            "type": "boolean",
+            "description": "Whether this area counts towards the energy reference area (Energiebezugsfläche, EBF)"
+        },
+        "usage_de": {
+            "type": "string",
+            "description": "Usage description in German (e.g. Wohnen, Büro, Gewerbe)"
+        },
+        "usage_fr": {
+            "type": "string",
+            "description": "Usage description in French"
+        },
+        "cantonal_zone": {
+            "type": "string",
+            "description": "Cantonal zone classification (e.g. W2, WG3, G)"
+        }
+    },
+    "required": ["area_type"],
+    "additionalProperties": false
+}

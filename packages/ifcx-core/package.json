@@ -1,0 +1,9 @@
+{
+    "name": "ifcx-core",
+    "version": "0.1.0",
+    "description": "IFCX (IFC5) document model, serializer, and bridge for IFCstudio",
+    "main": "src/index.ts",
+    "devDependencies": {
+        "chili-core": "*"
+    }
+}

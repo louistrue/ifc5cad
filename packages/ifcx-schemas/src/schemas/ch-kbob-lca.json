@@ -1,0 +1,65 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "ch::kbob-lca",
+    "title": "KBOB Life Cycle Assessment Data",
+    "description": "Swiss KBOB / eco-bau / IPB LCA data for building materials. Used for environmental impact calculations in Swiss building permits and sustainability reports.",
+    "type": "object",
+    "properties": {
+        "kbob_id": {
+            "type": "string",
+            "description": "KBOB material/product ID (e.g. '01.001', '09.003')",
+            "examples": ["01.001", "09.003", "14.001"]
+        },
+        "material_name_de": {
+            "type": "string",
+            "description": "Material name in German as in KBOB list"
+        },
+        "gwp_production": {
+            "type": "number",
+            "description": "Global Warming Potential for production phase (kg CO₂-eq / functional unit)"
+        },
+        "gwp_disposal": {
+            "type": "number",
+            "description": "Global Warming Potential for disposal phase (kg CO₂-eq / functional unit)"
+        },
+        "penr_production": {
+            "type": "number",
+            "description": "Primary Energy Non-Renewable for production (MJ oil-eq / functional unit)"
+        },
+        "penr_disposal": {
+            "type": "number",
+            "description": "Primary Energy Non-Renewable for disposal (MJ oil-eq / functional unit)"
+        },
+        "ubp_production": {
+            "type": "number",
+            "description": "Environmental impact points (Umweltbelastungspunkte, UBP) for production"
+        },
+        "ubp_disposal": {
+            "type": "number",
+            "description": "Environmental impact points (UBP) for disposal"
+        },
+        "functional_unit": {
+            "type": "string",
+            "enum": ["m2", "m3", "kg", "piece", "m", "t"],
+            "description": "Functional unit for the LCA values"
+        },
+        "service_life_years": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "description": "Reference service life (Referenz-Nutzungsdauer) in years"
+        },
+        "data_source": {
+            "type": "string",
+            "default": "KBOB 2022",
+            "description": "Data source and edition (e.g. 'KBOB 2022', 'KBOB 2024')"
+        },
+        "quantity": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Quantity of this material/product in this element (in functional units)"
+        }
+    },
+    "required": ["kbob_id", "functional_unit"],
+    "additionalProperties": false
+}
