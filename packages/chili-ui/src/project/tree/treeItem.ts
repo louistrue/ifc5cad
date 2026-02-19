@@ -24,6 +24,7 @@ export abstract class TreeItem extends HTMLElement {
         this.name = label({
             className: style.name,
             textContent: new Binding(node, "name"),
+            ondblclick: this.onNameDblClick,
         });
         this.visibleIcon = svg({
             className: style.icon,
@@ -85,5 +86,36 @@ export abstract class TreeItem extends HTMLElement {
             this.node.visible = !this.node.visible;
         });
         this.document.visual.update();
+    };
+
+    private readonly onNameDblClick = (e: MouseEvent) => {
+        e.stopPropagation();
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.value = this.node.name;
+        inp.className = style.nameInput;
+
+        let done = false;
+        const commit = () => {
+            if (done) return;
+            done = true;
+            const next = inp.value.trim();
+            if (next && next !== this.node.name) {
+                Transaction.execute(this.document, `rename: ${this.node.name}`, () => {
+                    this.node.name = next;
+                });
+            }
+            inp.replaceWith(this.name);
+        };
+
+        inp.addEventListener("blur", commit);
+        inp.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") { ev.preventDefault(); commit(); }
+            else if (ev.key === "Escape") { done = true; inp.replaceWith(this.name); }
+        });
+
+        this.name.replaceWith(inp);
+        inp.select();
+        inp.focus();
     };
 }

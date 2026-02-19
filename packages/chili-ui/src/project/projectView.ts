@@ -3,12 +3,16 @@
 
 import { div, span } from "chili-controls";
 import { type IDocument, type IView, Localize, PubSub } from "chili-core";
+import { IfcSpatialPanel } from "./ifcSpatialPanel";
 import style from "./projectView.module.css";
 import { ToolBar } from "./toolBar";
 import { Tree } from "./tree";
 
 export class ProjectView extends HTMLElement {
+    /** Raw Tree instances — kept for ToolBar expand/collapse access. */
     private readonly _documentTreeMap = new Map<IDocument, Tree>();
+    /** IfcSpatialPanel instances — what is actually shown in the panel. */
+    private readonly _documentSpatialMap = new Map<IDocument, IfcSpatialPanel>();
 
     private _activeDocument: IDocument | undefined;
     get activeDocument() {
@@ -49,9 +53,13 @@ export class ProjectView extends HTMLElement {
     }
 
     private readonly handleDocumentClosed = (document: IDocument) => {
+        const spatial = this._documentSpatialMap.get(document);
+        if (spatial) {
+            spatial.remove();
+            this._documentSpatialMap.delete(document);
+        }
         const tree = this._documentTreeMap.get(document);
         if (tree) {
-            tree.remove();
             tree.dispose();
             this._documentTreeMap.delete(document);
         }
@@ -60,16 +68,18 @@ export class ProjectView extends HTMLElement {
     private readonly handleActiveViewChanged = (view: IView | undefined) => {
         if (this._activeDocument === view?.document) return;
 
-        this._documentTreeMap.get(this._activeDocument!)?.remove();
+        this._documentSpatialMap.get(this._activeDocument!)?.remove();
         this._activeDocument = view?.document;
 
         if (view) {
-            let tree = this._documentTreeMap.get(view.document);
-            if (!tree) {
-                tree = new Tree(view.document);
+            let spatial = this._documentSpatialMap.get(view.document);
+            if (!spatial) {
+                const tree = new Tree(view.document);
                 this._documentTreeMap.set(view.document, tree);
+                spatial = new IfcSpatialPanel(view.document, tree);
+                this._documentSpatialMap.set(view.document, spatial);
             }
-            this.panel.append(tree);
+            this.panel.append(spatial);
         }
     };
 }
