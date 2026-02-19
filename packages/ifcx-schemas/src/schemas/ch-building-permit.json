@@ -1,0 +1,72 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "ch::building-permit",
+    "title": "Swiss Building Permit Data",
+    "description": "Data required for Swiss cantonal building permit submissions. Covers fire protection, noise, energy, and area classification requirements.",
+    "type": "object",
+    "properties": {
+        "fire_compartment_id": {
+            "type": "string",
+            "description": "Fire compartment identifier (Brandabschnitt)"
+        },
+        "fire_resistance_class": {
+            "type": "string",
+            "enum": ["EI30", "EI60", "EI90", "EI120", "REI30", "REI60", "REI90", "REI120"],
+            "description": "Fire resistance class per SIA 183 / EN 13501"
+        },
+        "fire_load_mj_per_m2": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Fire load density (Brandlast) in MJ/m²"
+        },
+        "noise_sensitivity_class": {
+            "type": "string",
+            "enum": ["ES I", "ES II", "ES III", "ES IV"],
+            "description": "Swiss noise sensitivity class (Lärmempfindlichkeitsstufe) per LSV"
+        },
+        "energy_reference_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Energy reference area (Energiebezugsfläche, EBF) in m²"
+        },
+        "minergie_standard": {
+            "type": "string",
+            "enum": ["None", "Minergie", "Minergie-P", "Minergie-A", "Minergie-ECO", "Minergie-P-ECO", "Minergie-A-ECO"],
+            "default": "None",
+            "description": "Minergie energy standard certification"
+        },
+        "cantonal_zone": {
+            "type": "string",
+            "description": "Cantonal building zone (e.g. W2, WG3, G, I, L)"
+        },
+        "floor_area_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Ausnützungsziffer (AZ) / Floor area ratio"
+        },
+        "building_height_m": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Building height in metres per cantonal definition"
+        },
+        "sia416_area_type": {
+            "type": "string",
+            "enum": ["GF", "NGF", "NNF", "VF", "FF", "KF", "AGF"],
+            "description": "SIA 416 area type for permit-relevant area classification"
+        },
+        "sia416_area_m2": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Computed SIA 416 area in m²"
+        },
+        "is_listed_building": {
+            "type": "boolean",
+            "description": "Whether the building/element is protected (Kulturobjekt/Schutzobjekt)"
+        },
+        "permit_number": {
+            "type": "string",
+            "description": "Building permit number (once issued)"
+        }
+    },
+    "additionalProperties": false
+}

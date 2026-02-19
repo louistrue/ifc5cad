@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "ch::ebkp-h",
+    "title": "eBKP-H Classification",
+    "description": "Schweizerisches Baukostenplan (eBKP-H) — Swiss building cost classification system for construction elements. Used for cost planning (CRB/NPK) and building permit submissions.",
+    "type": "object",
+    "properties": {
+        "code": {
+            "type": "string",
+            "pattern": "^[A-Z][0-9]{0,2}(\\.[0-9]{1,2})*$",
+            "description": "eBKP-H code (e.g. C2, C2.1, E2.3)",
+            "examples": ["C2", "C2.1", "E2", "E2.3", "G1"]
+        },
+        "name_de": {
+            "type": "string",
+            "description": "German designation"
+        },
+        "name_fr": {
+            "type": "string",
+            "description": "French designation"
+        },
+        "name_it": {
+            "type": "string",
+            "description": "Italian designation"
+        },
+        "unit": {
+            "type": "string",
+            "enum": ["m2", "m3", "m", "piece", "lump_sum"],
+            "description": "Measurement unit for cost calculation"
+        },
+        "cost_chf_per_unit": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Estimated cost in CHF per unit (for budgeting)"
+        }
+    },
+    "required": ["code"],
+    "additionalProperties": false
+}
