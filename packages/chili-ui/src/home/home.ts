@@ -79,7 +79,6 @@ export class Home extends HTMLElement {
             { className: style.logo },
             svg({ icon: "icon-chili" }),
             span({ textContent: "IFChili" }),
-            span({ className: style.version, textContent: __APP_VERSION__ }),
         );
     }
 
