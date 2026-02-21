@@ -1,0 +1,9 @@
+{
+    "name": "ifc-lite-core",
+    "version": "0.1.0",
+    "description": "IFC STEP import/export bridge for Chili3D",
+    "main": "src/index.ts",
+    "devDependencies": {
+        "chili-core": "*"
+    }
+}
