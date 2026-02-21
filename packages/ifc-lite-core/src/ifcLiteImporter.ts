@@ -420,7 +420,8 @@ function parseAxis2Placement3D(
     }
 
     const locationRef = parseEntityReference(placement.args[0] ?? "");
-    const location = locationRef !== undefined ? parsePoint3D(byId.get(locationRef)) : [0, 0, 0];
+    const location: [number, number, number] =
+        locationRef !== undefined ? parsePoint3D(byId.get(locationRef)) : [0, 0, 0];
 
     const axisRef = parseEntityReference(placement.args[1] ?? "");
     const refDirectionRef = parseEntityReference(placement.args[2] ?? "");
