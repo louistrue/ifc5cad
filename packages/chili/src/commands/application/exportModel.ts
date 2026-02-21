@@ -22,7 +22,7 @@ const EXPORT_FORMAT_COMMANDS: Record<string, CommandKeys> = {
 })
 export class ExportModel extends CancelableCommand {
     @property("file.format")
-    get format() {
+    get format(): Combobox<string> {
         return this.getPrivateValue("format", this.initFormats());
     }
 
@@ -49,7 +49,7 @@ export class ExportModel extends CancelableCommand {
         }
     }
 
-    private initFormats() {
+    private initFormats(): Combobox<string> {
         const box = new Combobox<string>();
         box.items.push("IFC", "IFCX");
         return box;
