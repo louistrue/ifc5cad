@@ -26,6 +26,8 @@ import { LayoutViewport } from "./viewport";
 
 const quickCommands: CommandKeys[] = [
     "doc.save",
+    "file.openIfc",
+    "file.exportIfc",
     "file.openIfcx",
     "file.exportIfcx",
     "edit.undo",
