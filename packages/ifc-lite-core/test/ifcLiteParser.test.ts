@@ -14,6 +14,21 @@ DATA;
 ENDSEC;
 END-ISO-10303-21;`;
 
+const MULTILINE_IFC = `ISO-10303-21;
+HEADER;
+FILE_SCHEMA(('IFC4X3_ADD2'));
+ENDSEC;
+DATA;
+#20=IFCBUILDINGELEMENTPROXY('id',$,'Wall ''A''',$,$,#8,#33,$);
+#33=IFCPRODUCTDEFINITIONSHAPE($,$,(#44));
+#44=IFCSHAPEREPRESENTATION(#12,'Body','Tessellation',(
+#55
+));
+#55=IFCTRIANGULATEDFACESET(#60,$,.T.,((1,2,3)),$);
+#60=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(1.,0.,0.),(0.,1.,0.)));
+ENDSEC;
+END-ISO-10303-21;`;
+
 describe("IfcLiteParser", () => {
     test("should parse schemas and entities", () => {
         const result = IfcLiteParser.parse(SAMPLE_IFC);
@@ -22,6 +37,14 @@ describe("IfcLiteParser", () => {
         expect(result.entities.length).toBe(2);
         expect(result.entities[0].id).toBe(1);
         expect(result.entities[0].type).toBe("IFCPROJECT");
+    });
+
+    test("should parse multiline entities and escaped quotes", () => {
+        const result = IfcLiteParser.parse(MULTILINE_IFC);
+
+        expect(result.entities.length).toBe(5);
+        expect(result.entities[0].type).toBe("IFCBUILDINGELEMENTPROXY");
+        expect(unquote(result.entities[0].args[2])).toBe("Wall 'A'");
     });
 
     test("should parse reference list and unquote values", () => {

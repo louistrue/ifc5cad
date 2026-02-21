@@ -3,7 +3,7 @@
 
 import type { IIfcLiteDocument, IIfcLiteEntity } from "./ifcLiteDocument";
 
-const ENTITY_REGEX = /#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.*)\);/gis;
+const ENTITY_REGEX = /^#(\d+)\s*=\s*([A-Z0-9_]+)\s*\(([\s\S]*)\)$/i;
 const FILE_SCHEMA_REGEX = /FILE_SCHEMA\s*\(\s*\(([^)]*)\)\s*\)\s*;/i;
 
 export class IfcLiteParser {
@@ -11,12 +11,16 @@ export class IfcLiteParser {
         const dataSection = IfcLiteParser.extractDataSection(text);
         const entities: IIfcLiteEntity[] = [];
 
-        for (const match of dataSection.matchAll(ENTITY_REGEX)) {
+        for (const statement of splitStatements(dataSection)) {
+            const match = statement.match(ENTITY_REGEX);
+            if (!match) {
+                continue;
+            }
             entities.push({
                 id: Number.parseInt(match[1], 10),
-                type: match[2],
+                type: match[2].toUpperCase(),
                 args: splitTopLevel(match[3]),
-                raw: match[0],
+                raw: statement,
             });
         }
 
@@ -38,6 +42,45 @@ export class IfcLiteParser {
     }
 }
 
+function splitStatements(dataSection: string): string[] {
+    const statements: string[] = [];
+    let current = "";
+    let inString = false;
+
+    for (let i = 0; i < dataSection.length; i++) {
+        const ch = dataSection[i];
+
+        if (ch === "'") {
+            if (inString && dataSection[i + 1] === "'") {
+                current += "''";
+                i++;
+                continue;
+            }
+            inString = !inString;
+            current += ch;
+            continue;
+        }
+
+        if (ch === ";" && !inString) {
+            const statement = current.trim();
+            if (statement.length > 0) {
+                statements.push(statement);
+            }
+            current = "";
+            continue;
+        }
+
+        current += ch;
+    }
+
+    const trailing = current.trim();
+    if (trailing.length > 0) {
+        statements.push(trailing);
+    }
+
+    return statements;
+}
+
 function extractHeaderSection(text: string): string {
     const upper = text.toUpperCase();
     const headerStart = upper.indexOf("HEADER;");
@@ -54,7 +97,7 @@ function extractSchemas(text: string): string[] {
     return splitTopLevel(match[1]).map((x) => unquote(x.toUpperCase()));
 }
 
-function splitTopLevel(value: string): string[] {
+export function splitTopLevel(value: string): string[] {
     const result: string[] = [];
     let current = "";
     let depth = 0;
@@ -63,7 +106,12 @@ function splitTopLevel(value: string): string[] {
     for (let i = 0; i < value.length; i++) {
         const ch = value[i];
 
-        if (ch === "'" && value[i - 1] !== "\\") {
+        if (ch === "'") {
+            if (inString && value[i + 1] === "'") {
+                current += "''";
+                i++;
+                continue;
+            }
             inString = !inString;
             current += ch;
             continue;

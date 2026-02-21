@@ -3,7 +3,12 @@
 
 import { FolderNode, Mesh, MeshNode, type IDocument, type INode } from "chili-core";
 import type { IIfcLiteDocument, IIfcLiteEntity } from "./ifcLiteDocument";
-import { parseEntityReference, parseReferenceList, unquote } from "./ifcLiteParser";
+import {
+    parseEntityReference,
+    parseReferenceList,
+    splitTopLevel,
+    unquote,
+} from "./ifcLiteParser";
 
 const IFC_REL_AGGREGATES = "IFCRELAGGREGATES";
 const IFC_REL_CONTAINED = "IFCRELCONTAINEDINSPATIALSTRUCTURE";
@@ -103,7 +108,7 @@ function tryExtractMesh(entity: IIfcLiteEntity, byId: Map<number, IIfcLiteEntity
 
         const repItems = parseReferenceList(rep.args[3] ?? "");
         for (const itemRef of repItems) {
-            const mesh = meshFromRepresentationItem(byId.get(itemRef), byId);
+            const mesh = meshFromRepresentationItem(itemRef, byId, new Set<number>());
             if (mesh) return mesh;
         }
     }
@@ -112,9 +117,16 @@ function tryExtractMesh(entity: IIfcLiteEntity, byId: Map<number, IIfcLiteEntity
 }
 
 function meshFromRepresentationItem(
-    item: IIfcLiteEntity | undefined,
+    itemRef: number,
     byId: Map<number, IIfcLiteEntity>,
+    visited: Set<number>,
 ): Mesh | undefined {
+    if (visited.has(itemRef)) {
+        return undefined;
+    }
+    visited.add(itemRef);
+
+    const item = byId.get(itemRef);
     if (!item) return undefined;
 
     if (item.type === "IFCTRIANGULATEDFACESET") {
@@ -123,6 +135,26 @@ function meshFromRepresentationItem(
 
     if (item.type === "IFCFACETEDBREP") {
         return meshFromFacetedBrep(item, byId);
+    }
+
+    if (item.type === "IFCMAPPEDITEM") {
+        const sourceRef = parseEntityReference(item.args[0] ?? "");
+        if (sourceRef === undefined) return undefined;
+
+        const map = byId.get(sourceRef);
+        if (!map || map.type !== "IFCREPRESENTATIONMAP") return undefined;
+
+        const repRef = parseEntityReference(map.args[1] ?? "");
+        if (repRef === undefined) return undefined;
+
+        const rep = byId.get(repRef);
+        if (!rep || rep.type !== "IFCSHAPEREPRESENTATION") return undefined;
+
+        const repItems = parseReferenceList(rep.args[3] ?? "");
+        for (const ref of repItems) {
+            const mesh = meshFromRepresentationItem(ref, byId, visited);
+            if (mesh) return mesh;
+        }
     }
 
     return undefined;
@@ -220,16 +252,14 @@ function buildSurfaceMesh(points: number[][], triangles: number[][]): Mesh {
 }
 
 function parsePointTupleList(value: string): number[][] {
-    const tuples = extractTuples(value);
-    return tuples
+    return splitOuterTuple(value)
         .map(parseNumberTuple)
         .filter((x) => x.length >= 3)
         .map((x) => [x[0], x[1], x[2]]);
 }
 
 function parseTriangleTupleList(value: string): number[][] {
-    const tuples = extractTuples(value);
-    return tuples
+    return splitOuterTuple(value)
         .map(parseNumberTuple)
         .filter((x) => x.length >= 3)
         .map((x) => [Math.max(0, x[0] - 1), Math.max(0, x[1] - 1), Math.max(0, x[2] - 1)]);
@@ -244,28 +274,12 @@ function parseNumberTuple(value: string): number[] {
         .filter((x) => Number.isFinite(x));
 }
 
-function extractTuples(value: string): string[] {
-    const tuples: string[] = [];
-    let depth = 0;
-    let start = -1;
-
-    for (let i = 0; i < value.length; i++) {
-        const ch = value[i];
-        if (ch === "(") {
-            depth++;
-            if (depth === 2) {
-                start = i;
-            }
-        } else if (ch === ")") {
-            if (depth === 2 && start >= 0) {
-                tuples.push(value.slice(start, i + 1));
-                start = -1;
-            }
-            depth--;
-        }
+function splitOuterTuple(value: string): string[] {
+    const trimmed = value.trim();
+    if (!trimmed.startsWith("(") || !trimmed.endsWith(")")) {
+        return [];
     }
-
-    return tuples;
+    return splitTopLevel(trimmed.slice(1, -1));
 }
 
 function toDisplayName(entity: IIfcLiteEntity | undefined): string {
