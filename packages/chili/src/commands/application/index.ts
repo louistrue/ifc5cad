@@ -2,10 +2,12 @@
 // See LICENSE file in the project root for full license information.
 
 export * from "./exportIfc";
+export * from "./exportModel";
 export * from "./exportIfcx";
 export * from "./newDocument";
 export * from "./openDocument";
 export * from "./openIfc";
+export * from "./openModel";
 export * from "./openIfcx";
 export * from "./performanceTest";
 export * from "./saveDocument";

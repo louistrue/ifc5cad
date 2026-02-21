@@ -64,9 +64,11 @@ export default {
         "command.edit.undo": "Desfazer",
         "command.file.export": "Exportar",
         "command.file.exportIfc": "Export IFC",
+        "command.file.exportModel": "Export Model",
         "command.file.import": "Importar",
         "command.file.openIfc": "Open IFC",
         "command.file.openIfcx": "Abrir IFCX",
+        "command.file.openModel": "Open Model",
         "error.ifc.noDocument": "No active document to export",
     },
 } satisfies Locale;
