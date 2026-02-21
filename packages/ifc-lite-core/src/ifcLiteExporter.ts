@@ -140,7 +140,7 @@ function exportModelNodes(writer: IfcStepWriter, rootNode: INodeLinkedList, plac
 
     let child = rootNode.firstChild;
     while (child) {
-        if (NodeUtils.isLinkedListNode(child) && child.count > 0) {
+        if (NodeUtils.isLinkedListNode(child) && child.firstChild) {
             ids.push(...exportModelNodes(writer, child, placement));
         } else {
             ids.push(
