@@ -4,3 +4,7 @@
 export * from "./IFCXDocument";
 export * from "./IFCXImporter";
 export * from "./IFCXSerializer";
+export * from "./IFCLiteDocument";
+export * from "./IFCLiteExporter";
+export * from "./IFCLiteImporter";
+export * from "./IFCLiteSerializer";
